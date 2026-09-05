@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cálculo de líneas aéreas BT/MT — NT 008/01 · ET 1005 · ACMEE ET 5</title>
+<style>
+  :root{
+    --paper:#0d1420;
+    --ink:#eef2f9;
+    --ink-soft:#8fa1ba;
+    --ink-faint:#5e7288;
+    --rule:#1f2c3d;
+    --rule-soft:#182332;
+    --accent:#5b9dff;
+    --accent-soft:#8fc2ff;
+    --accent-bg:rgba(91,157,255,0.10);
+    --ok:#34d399;
+    --ok-bg:rgba(52,211,153,0.13);
+    --ok-border:rgba(52,211,153,0.35);
+    --bad:#fb7185;
+    --bad-bg:rgba(251,113,133,0.13);
+    --bad-border:rgba(251,113,133,0.35);
+    --card:#131d2a;
+    --card-hover:#16212f;
+    --mono: ui-monospace, "SFMono-Regular", "JetBrains Mono", "IBM Plex Mono", Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Helvetica, Arial, sans-serif;
+    --radius: 14px;
+  }
+  *{box-sizing:border-box;}
+  html{color-scheme:dark; scroll-behavior:smooth;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(900px 460px at 15% -8%, rgba(91,157,255,0.10) 0%, transparent 70%),
+      radial-gradient(700px 380px at 100% 0%, rgba(91,157,255,0.06) 0%, transparent 65%),
+      var(--paper);
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:14.5px;
+    line-height:1.55;
+    padding:28px 16px 70px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1240px;margin:0 auto;}
+
+  header.top{
+    padding-bottom:20px;
+    margin-bottom:24px;
+    display:flex; justify-content:space-between; align-items:flex-start; gap:20px; flex-wrap:wrap;
+    border-bottom:1px solid var(--rule);
+  }
+  header.top .title-block h1{
+    font-family:var(--sans);
+    font-weight:700;
+    font-size:23px;
+    margin:0 0 6px;
+    color:var(--ink);
+    letter-spacing:-0.2px;
+  }
+  header.top .title-block p{margin:0;color:var(--ink-soft);font-size:12.5px;max-width:620px;line-height:1.5;}
+  header.top .stamp{
+    border:1px solid var(--rule);
+    color:var(--ink-soft);
+    border-radius:10px;
+    background:var(--card);
+    font-family:var(--mono);
+    font-size:10.5px;
+    padding:8px 12px;
+    text-align:center;
+    line-height:1.5;
+    white-space:nowrap;
+  }
+
+  .grid{display:grid; grid-template-columns: 360px 1fr; gap:22px; align-items:start;}
+  @media (max-width: 900px){ .grid{grid-template-columns:1fr;} }
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--rule);
+    border-radius:var(--radius);
+    padding:20px 22px 22px;
+    margin-bottom:16px;
+    transition:border-color 0.15s ease;
+  }
+  .card:hover{border-color:var(--rule-soft);}
+  .card h2{
+    font-family:var(--sans);
+    font-weight:700;
+    font-size:14.5px;
+    letter-spacing:-0.1px;
+    color:var(--ink);
+    margin:0 0 10px;
+    display:flex; align-items:center; gap:9px;
+  }
+  .card h2::before{
+    content:"";
+    width:5px; height:5px; border-radius:50%;
+    background:var(--accent); flex:none;
+  }
+  .card .formula{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--ink-faint);
+    background:var(--rule-soft);
+    border-radius:8px;
+    padding:8px 10px;
+    margin:0 0 14px;
+    line-height:1.6;
+    overflow-x:auto;
+  }
+
+  label.field{display:block; margin-bottom:14px;}
+  label.field span.lbl{
+    display:block; font-size:11.5px; font-weight:600; color:var(--ink-soft); margin-bottom:5px;
+  }
+  input[type=number], input[type=text], select{
+    width:100%;
+    border:1px solid var(--rule);
+    background:#0a121c;
+    padding:9px 11px;
+    font-size:13.5px;
+    font-family:var(--sans);
+    color:var(--ink);
+    border-radius:9px;
+    transition:border-color 0.15s ease, background 0.15s ease;
+  }
+  input:hover, select:hover{border-color:var(--rule-soft);}
+  input:focus, select:focus{outline:none; border-color:var(--accent); background:#0c1522; box-shadow:0 0 0 3px var(--accent-bg);}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .help{font-size:11px; color:var(--ink-faint); margin-top:5px; display:block; line-height:1.45;}
+  .chk{display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--ink-soft); margin-top:8px;}
+  .chk input{width:auto;}
+  .kv{display:grid; grid-template-columns:repeat(2,1fr); gap:4px 14px; font-size:12px; color:var(--ink-soft); margin-top:10px;}
+  .kv b{color:var(--ink); font-family:var(--mono); font-weight:600;}
+
+  .stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(135px,1fr)); gap:14px; margin-top:4px;}
+  .stat{background:var(--rule-soft); border-radius:10px; padding:10px 12px;}
+  .stat .l{font-size:10.5px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:0.4px; margin-bottom:3px;}
+  .stat .v{font-family:var(--mono); font-size:18px; font-weight:600; color:var(--ink); line-height:1.25;}
+  .stat .v.accent{color:var(--accent-soft);}
+
+  table{width:100%; border-collapse:collapse; font-size:12px;}
+  th{
+    text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:0.4px;
+    color:var(--ink-faint); border-bottom:1px solid var(--rule); padding:8px 8px;
+  }
+  td{border-bottom:1px solid var(--rule-soft); padding:7px 8px; font-family:var(--mono); font-variant-numeric:tabular-nums; color:var(--ink-soft);}
+  tr:hover td{background:rgba(91,157,255,0.05);}
+  .tbl-wrap{overflow-x:auto; border-radius:10px; border:1px solid var(--rule); margin-top:4px;}
+  .tbl-wrap table{margin:0;}
+  .tbl-wrap th{padding-left:12px;}
+  .tbl-wrap td{padding-left:12px;}
+
+  .pill{display:inline-flex; align-items:center; gap:5px; padding:5px 12px; border-radius:20px; font-size:11px; font-weight:700; letter-spacing:0.3px; border:1px solid transparent;}
+  .pill.ok{background:var(--ok-bg); color:var(--ok); border-color:var(--ok-border);}
+  .pill.bad{background:var(--bad-bg); color:var(--bad); border-color:var(--bad-border);}
+
+  .note{
+    margin-top:12px; border:1px solid var(--rule); background:var(--rule-soft);
+    padding:10px 13px; font-size:12px; color:var(--ink-soft); border-radius:10px; line-height:1.5;
+  }
+  .note.warn{border-color:rgba(91,157,255,0.3); color:var(--accent-soft); background:var(--accent-bg);}
+  .ref{
+    font-family:var(--mono); font-size:10.5px; color:var(--ink-faint);
+    background:var(--rule-soft); border:1px solid var(--rule);
+    border-radius:8px; padding:6px 10px; margin:0 0 12px; display:block; line-height:1.5;
+  }
+  .ref b{color:var(--ink-soft);}
+  ul.obs{margin:8px 0 0; padding-left:20px; font-size:12.5px; color:var(--ink-soft); line-height:1.6;}
+  ul.obs li{margin-bottom:6px;}
+  .btns{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;}
+  .btns button{
+    font-size:11px; padding:6px 11px; border:1px solid var(--rule); background:var(--rule-soft);
+    color:var(--ink-soft); border-radius:20px; cursor:pointer; transition:all 0.15s ease;
+  }
+  .btns button:hover{border-color:var(--accent); color:var(--accent-soft); background:var(--accent-bg);}
+  svg text{font-family:var(--mono);}
+  .dl{display:inline-flex;align-items:center;gap:6px;margin-top:0;font-size:11.5px;font-family:var(--sans);font-weight:600;
+    padding:9px 14px;border-radius:10px;border:1px solid var(--accent);color:#06121f;background:var(--accent);
+    text-decoration:none;cursor:pointer; transition:filter 0.15s ease;}
+  .dl:hover{filter:brightness(1.12);}
+  footer.foot{margin-top:30px; border-top:1px solid var(--rule); padding-top:14px; font-size:11px; color:var(--ink-faint); line-height:1.6;}
+
+  .resumen-bar{
+    display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+    background:var(--card); border:1px solid var(--rule); border-radius:var(--radius);
+    padding:16px 20px; margin-bottom:18px;
+  }
+  .resumen-bar .rb-item{display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--ink-soft);}
+  .resumen-bar .rb-num{font-family:var(--mono); font-size:20px; font-weight:700; color:var(--ink);}
+  .resumen-bar .rb-num.ok{color:var(--ok);}
+  .resumen-bar .rb-num.bad{color:var(--bad);}
+  .group-label{
+    font-family:var(--sans); font-weight:700; font-size:12px; letter-spacing:0.6px; text-transform:uppercase;
+    color:var(--ink-faint); margin:26px 0 10px; padding-top:4px; display:flex; align-items:center; gap:10px;
+  }
+  .group-label::after{content:""; flex:1; height:1px; background:var(--rule);}
+  .group-label:first-child{margin-top:0;}
+  .nav-jump{
+    position:sticky; top:0; z-index:20;
+    display:flex; gap:8px; flex-wrap:wrap;
+    background:rgba(13,20,32,0.92); backdrop-filter:blur(6px);
+    border:1px solid var(--rule); border-radius:12px;
+    padding:10px 12px; margin-bottom:14px;
+  }
+  .nav-jump a{
+    font-size:11.5px; font-weight:600; color:var(--ink-soft); text-decoration:none;
+    padding:6px 11px; border-radius:20px; border:1px solid var(--rule); background:var(--rule-soft);
+    transition:all 0.15s ease; white-space:nowrap;
+  }
+  .nav-jump a:hover{color:var(--accent-soft); border-color:var(--accent); background:var(--accent-bg);}
+  .nav-jump .spacer{flex:1;}
+  .nav-jump button.toggle-all{
+    font-size:11.5px; font-weight:600; color:var(--ink-soft); cursor:pointer;
+    padding:6px 11px; border-radius:20px; border:1px solid var(--rule); background:var(--rule-soft);
+    transition:all 0.15s ease; white-space:nowrap; font-family:var(--sans);
+  }
+  .nav-jump button.toggle-all:hover{color:var(--accent-soft); border-color:var(--accent); background:var(--accent-bg);}
+
+  /* Tarjetas colapsables: click en el título para plegar/desplegar */
+  .card h2{cursor:pointer; user-select:none;}
+  .card h2::after{content:"▾"; margin-left:auto; color:var(--ink-faint); font-size:11px; transition:transform 0.15s ease; flex:none;}
+  .card.collapsed h2{margin-bottom:0;}
+  .card.collapsed h2::after{transform:rotate(-90deg);}
+  .card.collapsed > *:not(h2){display:none;}
+
+  /* Tarjeta de resultado final */
+  .card-final{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent-bg);}
+  .final-verdict{
+    font-family:var(--mono); font-weight:700; font-size:15px; letter-spacing:0.3px;
+    padding:9px 14px; border-radius:10px; margin:0 0 14px;
+  }
+  .final-verdict.ok{background:var(--ok-bg); color:var(--ok); border:1px solid var(--ok-border);}
+  .final-verdict.bad{background:var(--bad-bg); color:var(--bad); border:1px solid var(--bad-border);}
+  .final-grid{display:flex; flex-direction:column; gap:2px;}
+  .final-item{
+    display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:8px; font-size:12.5px;
+  }
+  .final-item .fi-dot{width:8px; height:8px; border-radius:50%; flex:none;}
+  .final-item.ok .fi-dot{background:var(--ok);}
+  .final-item.bad .fi-dot{background:var(--bad);}
+  .final-item .fi-label{color:var(--ink-soft); flex:1;}
+  .final-item .fi-val{font-family:var(--mono); font-weight:700; font-size:11.5px; letter-spacing:0.3px;}
+  .final-item.ok .fi-val{color:var(--ok);}
+  .final-item.bad .fi-val{color:var(--bad);}
+  .final-item.bad{background:var(--bad-bg);}
+  .final-item.ok:hover, .final-item.bad:hover{filter:brightness(1.15);}
+
+  /* Resaltar en color el valor decisivo dentro de una tarjeta de verificación */
+  .stat .v.ok{color:var(--ok);}
+  .stat .v.bad{color:var(--bad);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="title-block">
+      <h1>Cálculo de líneas aéreas de distribución — BT / MT</h1>
+      <p>AEA 95201 (BT) · AEA 95301 (MT) · NT 008/01 EdERSA Cap. VIII (Tablas 8.2, 8.4, 8.6.3) · EPEC ET 1005 · ACMEE ET 5. Todos los campos son editables — el cálculo se rehace solo.</p>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+      <div class="stamp">USO INTERNO / PRE-CÁLCULO<br/>no reemplaza proyecto firmado</div>
+      <a class="dl" id="descargar" href="calculadora-lineas-aereas.html" download="calculadora-lineas-aereas.html">&#8681; DESCARGAR ESTA PÁGINA (HTML OFFLINE)</a>
+      <button type="button" id="btnBorrarGuardado" class="dl" style="background:transparent;color:var(--ink-soft);border-color:var(--rule);">Borrar datos guardados</button>
+    </div>
+  </header>
+
+  <div class="grid">
+    <!-- ===================== ASIDE: INPUTS ===================== -->
+    <aside>
+
+      <div class="card">
+        <h2>1. Datos del proyecto</h2>
+        <label class="field">
+          <span class="lbl">Zona climática (Tabla 8.2)</span>
+          <select id="zona"></select>
+        </label>
+        <label class="field">
+          <span class="lbl">Definición de la traza</span>
+          <select id="modoTraza">
+            <option value="vanos" selected>Por vanos parciales (relevados)</option>
+            <option value="total">Por longitud total + cantidad de vanos</option>
+          </select>
+        </label>
+        <div id="campoVanos">
+          <label class="field">
+            <span class="lbl">Vanos parciales — distancia en línea recta entre apoyos [m] (editable)</span>
+            <input type="text" id="vanosTxt" value="35, 35, 35, 35, 30" />
+            <span class="help">Cargá la distancia horizontal real relevada entre cada par de apoyos consecutivos (no la longitud del conductor).</span>
+          </label>
+        </div>
+        <div id="campoTotal" style="display:none;">
+          <div class="row2">
+            <label class="field"><span class="lbl">Longitud total [m]</span><input type="number" id="longTotal" value="100" step="any"/></label>
+            <label class="field"><span class="lbl">Cantidad de vanos</span><input type="number" id="nVanos" value="3" step="1" min="1"/></label>
+          </div>
+          <span class="help">La longitud total se reparte en vanos iguales (L / n). Ej.: 100 m en 3 vanos → 33,33 m cada uno.</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>2. Conductor</h2>
+        <label class="field">
+          <span class="lbl">Tipo</span>
+          <select id="cond"></select>
+        </label>
+        <div class="kv" id="condKv"></div>
+        <label class="chk">
+          <input type="checkbox" id="antivib" />
+          Lleva elementos antivibratorios (usa tensión admisible a T.m.a. de Tabla §8.6.3 con antivibratorio)
+        </label>
+      </div>
+
+      <div class="card">
+        <h2>3. Postación y estructura</h2>
+        <div class="row2">
+          <label class="field"><span class="lbl">Altura poste [m]</span><input type="number" id="alturaPoste" value="8" step="any"/></label>
+          <label class="field"><span class="lbl">N° de haces/fases (ternas en paralelo)</span><input type="number" id="nFases" value="1" step="any"/><span class="help">Ej.: "3x(3x95+50)" o "7x(...)" = 3 o 7 ternas en paralelo. Multiplica el tiro sobre el poste, divide la impedancia en ΔU%, y desplaza hacia abajo la ménsula más baja para el cálculo de gálibo.</span></label>
+        </div>
+        <label class="field"><span class="lbl">Separación vertical entre ménsulas [mm]</span><input type="number" id="sepMensulas" value="273" step="any"/><span class="help">Dato de catálogo/plano EDERSA (cabezal con varias ternas apiladas), NO calculado. Con n&gt;1 ternas, el gálibo se verifica en la ménsula MÁS BAJA, no en la de arriba.</span></label>
+        <label class="field">
+          <span class="lbl">Tipo de estructura</span>
+          <select id="tipo">
+            <option value="suspension">Sostén / suspensión</option>
+            <option value="angular">Angular</option>
+            <option value="retencion">Retención</option>
+            <option value="terminal" selected>Terminal</option>
+          </select>
+        </label>
+        <label class="field" id="anguloField"><span class="lbl">Ángulo de traza [°]</span><input type="number" id="angulo" value="30" step="any"/></label>
+        <div class="row2">
+          <label class="field"><span class="lbl">Ke</span><input type="number" id="Ke" value="1.1" step="any"/></label>
+          <label class="field"><span class="lbl">Kc</span><input type="number" id="Kc" value="1.2" step="any"/></label>
+          <label class="field"><span class="lbl">φ</span><input type="number" id="phi" value="0.5" step="any"/>
+            <span class="help">Tabla 8.5 fija φ=0,5 para postación de <b style="color:var(--ink)">madera</b> (0,9/0,75/0,7 son solo para hormigón armado) — no dejar el 0,9 por defecto genérico.</span>
+            <span class="help" id="Tabla85Help"></span>
+            <div class="btns" id="Tabla85Btns"></div>
+          </label>
+          <label class="field"><span class="lbl">Rc poste (cima) [kg]</span><input type="number" id="Rc" value="600" step="any"/><span class="help">Valor tabulado de rotura, no libre — ver ET 2001/01 Tabla IV, pág. 14 de 15 (según Ø cima y longitud útil).</span><span class="help" id="RcHelp"></span><div class="btns" id="RcBtns"></div></label>
+          <label class="field"><span class="lbl">Ø fundación [m]</span><input type="number" id="diamFund" value="0.5" step="any"/></label>
+          <label class="field"><span class="lbl">Peso poste [kg]</span><input type="number" id="pesoPoste" value="250" step="any"/><span class="help" id="pesoPosteHelp"></span><div class="btns" id="pesoPosteBtns"></div></label>
+          <label class="field"><span class="lbl">Densidad madera [kg/m³] (para estimar peso)</span><input type="number" id="densidadMadera" value="950" step="any"/><span class="help">Eucalipto impregnado: valor de referencia bibliográfico 900–1000 kg/m³, NO tabulado en ET 2001/01 ni NT 008/01. Usar peso real de la ficha del proveedor cuando esté disponible.</span></label>
+          <label class="field"><span class="lbl">Ø poste expuesto al viento [m]</span><input type="number" id="diamPoste" value="0.18" step="any"/><span class="help">Si conocés el Ø real de cima/base, cargalo (promedio). Por defecto 0,18 m (poste "medio" asumido).</span></label>
+          <label class="field">
+            <span class="lbl">Tipo de terreno (§8.11.6.5, informativo)</span>
+            <select id="tipoSuelo"></select>
+            <span class="help">Al elegir un tipo, autocompleta Ct y habilita el chequeo de presión admisible (§8.11.6.4). "Sin estudio" deja Ct=4 por defecto sin verificar presión.</span>
+          </label>
+          <label class="field"><span class="lbl">Ct = Cb terreno [kg/cm³]</span><input type="number" id="ctSuelo" value="4" step="any"/></label>
+          <label class="field">
+            <span class="lbl">Hipótesis fundación</span>
+            <select id="coefFund">
+              <option value="1.5" selected>Normal (s = 1,5)</option>
+              <option value="1.2">Excepcional (s = 1,2)</option>
+            </select>
+          </label>
+        </div>
+        <label class="field">
+          <span class="lbl">Gálibo mínimo exigido [m]</span>
+          <input type="number" id="galibo" value="5" step="any"/>
+          <div class="btns" id="galiboBtns"></div>
+        </label>
+        <label class="field" style="margin-top:10px;">
+          <span class="lbl">
+            <input type="checkbox" id="usarRienda" style="width:auto;margin-right:6px;vertical-align:middle;"/>
+            Estructura con rienda / tensor (si el poste solo no verifica)
+          </span>
+        </label>
+        <label class="field">
+          <span class="lbl">Ángulo de la rienda respecto al suelo [°]</span>
+          <input type="number" id="anguloRienda" value="45" step="any"/>
+          <div class="btns" id="riendaBtns"></div>
+          <span class="help">Ángulo típico 30–45°: más chico = rienda más eficiente pero requiere más espacio horizontal para anclar.</span>
+        </label>
+      </div>
+
+      <div class="card">
+        <h2>4. Datos eléctricos</h2>
+        <label class="field">
+          <span class="lbl">Sistema</span>
+          <select id="trifasica">
+            <option value="3" selected>Trifásico</option>
+            <option value="1">Monofásico</option>
+          </select>
+        </label>
+        <div class="row2">
+          <label class="field"><span class="lbl">Corriente de diseño [A]</span><input type="number" id="I" value="100" step="any"/></label>
+          <label class="field"><span class="lbl">cos φ</span><input type="number" id="cosphi" value="0.9" step="any"/></label>
+          <label class="field"><span class="lbl">Tensión nominal [V]</span><input type="number" id="Un" value="380" step="any"/></label>
+          <label class="field"><span class="lbl">Límite ΔU [%]</span><input type="number" id="limite" value="3" step="any"/></label>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- ===================== RESULTS ===================== -->
+    <div id="results"></div>
+  </div>
+
+  <footer class="foot">
+    Herramienta de pre-cálculo. La aprobación final de EDERSA/EPEN/EPEC requiere proyecto firmado por profesional matriculado, estudio de suelo real y ficha técnica certificada del conductor.
+  </footer>
+</div>
+
+<script>
+/* =========================================================================
+ * Motor de cálculo — puerto directo de line-calc.ts, con las correcciones
+ * de NT 008/01 (estado base T.m.a. §8.6.3, verificación 70% rotura §8.6.2.b,
+ * Ct=4 kg/cm³ por defecto §8.11.6.5).
+ * ========================================================================= */
+
+const ZONAS = {
+  D1: { nombre: "D1 — Andina y Línea Sur", estados: [
+    { id:"tmax",   nombre:"1) T. Máx.",            temp:35,  viento:0,   hielo:0  },
+    { id:"tmin",   nombre:"2) T. mín.",             temp:-20, viento:0,   hielo:0  },
+    { id:"viento", nombre:"3) T. + viento máx.",    temp:10,  viento:130, hielo:0  },
+    { id:"hielo",  nombre:"4) T.h. (hielo)",        temp:-5,  viento:50,  hielo:10 },
+    { id:"tma",    nombre:"5) T.m.a. (media anual)",temp:8,   viento:0,   hielo:0  },
+  ]},
+  D2: { nombre: "D2 — Valle del Río Negro y Atlántica", estados: [
+    { id:"tmax",   nombre:"1) T. Máx.",            temp:40,  viento:0,   hielo:0 },
+    { id:"tmin",   nombre:"2) T. mín.",             temp:-15, viento:0,   hielo:0 },
+    { id:"viento", nombre:"3) T. + viento máx.",    temp:10,  viento:140, hielo:0 },
+    { id:"hielo",  nombre:"4) T.h.",                temp:-5,  viento:50,  hielo:0 },
+    { id:"tma",    nombre:"5) T.m.a. (media anual)",temp:14,  viento:0,   hielo:0 },
+  ]},
+};
+
+const TENSION_TMA = {
+  cobre:                        { sin:8.6, con:9.4 },
+  aleacion_aluminio:             { sin:4.6, con:5.0 },
+  aleacion_aluminio_alma_acero:  { sin:5.7, con:7.8 },
+  aluminio_alma_acero:           { sin:5.7, con:6.5 },
+};
+
+const CONDUCTORES = [
+  // seccion = sección nominal de la FASE (identificación / uso eléctrico, R20 ya calibrado para el modelo)
+  // seccionMecanica = sección REAL del NEUTRO PORTANTE (único elemento que sostiene mecánicamente el conjunto
+  //   en cables preensamblados — NT 008/01 §8.6 pág.5: "sección real, no la nominal". Los tres modelos BT
+  //   preensamblados llevan neutro "/50" (mismo neutro real ~50,14mm² IRAM 2263 sin importar la fase).
+  { nombre:"Preens. BT 3x50+50 mm² (Al)", material:"aleacion_aluminio", seccion:50,   seccionMecanica:50.14, diametro:32,   peso:0.75,  E:6000, alpha:23e-6, rotura:1405, R20:0.641, X:0.08 },
+  { nombre:"Preens. BT 3x70+50 mm² (Al)", material:"aleacion_aluminio", seccion:70,   seccionMecanica:50.14, diametro:35,   peso:0.96,  E:6000, alpha:23e-6, rotura:1405, R20:0.443, X:0.08 },
+  { nombre:"Preens. BT 3x95+50 mm² (Al)", material:"aleacion_aluminio", seccion:95,   seccionMecanica:50.14, diametro:39,   peso:1.25,  E:6000, alpha:23e-6, rotura:1405, R20:0.32,  X:0.08 },
+  { nombre:"MT AlAl 35/6 mm² desnudo",       material:"aleacion_aluminio", seccion:34.4, seccionMecanica:34.4,  diametro:7.5,  peso:0.095, E:5600, alpha:23e-6, rotura:620,  R20:0.966, X:0.38 },
+  { nombre:"MT AlAl 50/8 mm² desnudo",       material:"aleacion_aluminio", seccion:49.5, seccionMecanica:49.5,  diametro:9.0,  peso:0.136, E:5600, alpha:23e-6, rotura:880,  R20:0.671, X:0.37 },
+  { nombre:"MT AlAl 70/12 mm² desnudo",      material:"aleacion_aluminio", seccion:69.2, seccionMecanica:69.2,  diametro:10.7, peso:0.19,  E:5600, alpha:23e-6, rotura:1230, R20:0.48,  X:0.36 },
+  { nombre:"MT AlAl 95/15 mm² desnudo",      material:"aleacion_aluminio", seccion:94.4, seccionMecanica:94.4,  diametro:12.5, peso:0.26,  E:5600, alpha:23e-6, rotura:1640, R20:0.352, X:0.35 },
+];
+
+function vanoRegulacion(vanos){
+  const s3 = vanos.reduce((a,v)=>a+v**3,0);
+  const s1 = vanos.reduce((a,v)=>a+v,0);
+  return s1>0 ? Math.sqrt(s3/s1) : 0;
+}
+function coefC(d){ if(d<12.5) return 1.2; if(d<=15.8) return 1.1; return 1.0; }
+function vientoSobreConductor(vKmh, diametroMm){
+  const v = vKmh/3.6;
+  const K = v>30 ? 0.75 : 0.85;
+  const C = coefC(diametroMm);
+  const q = (v*v)/16;
+  const F = diametroMm/1000;
+  return { v,K,C,q,F, carga:K*C*q*F };
+}
+function cargaHielo(diametroMm, espesorMm){
+  if(espesorMm<=0) return 0;
+  const d=diametroMm/1000, e=espesorMm/1000;
+  const area = Math.PI*(((d+2*e)**2 - d**2)/4);
+  return area*900;
+}
+function cargaEspecifica(c, estado){
+  const viento = vientoSobreConductor(estado.viento, c.diametro).carga;
+  const hielo = cargaHielo(c.diametro, estado.hielo);
+  const vertical = c.peso + hielo;
+  const resultante = Math.sqrt(vertical**2 + viento**2);
+  return { viento, hielo, vertical, resultante, g: resultante/c.seccionMecanica };
+}
+function resolverCubicaPositiva(A, B){
+  // f(s) = s^3 - A*s^2 - B ; única raíz real positiva de interés físico.
+  // Se acota por bisección (robusto, no diverge) y se pule con Newton al final.
+  const f = s => s*s*s - A*s*s - B;
+  let lo = 1e-6, hi = Math.max(Math.abs(A), Math.cbrt(Math.abs(B)+1), 1) * 4;
+  let guard = 0;
+  while(f(hi) <= 0 && guard < 200){ hi *= 2; guard++; }
+  if(f(lo) > 0) lo = 0; // salvaguarda (caso no físico, B<0)
+  for(let i=0;i<200;i++){
+    const mid = (lo+hi)/2;
+    if(f(mid) > 0) hi = mid; else lo = mid;
+  }
+  let s = (lo+hi)/2;
+  for(let i=0;i<30;i++){
+    const fs = f(s), df = 3*s*s - 2*A*s;
+    if(df === 0) break;
+    const next = s - fs/df;
+    if(!isFinite(next) || next<=0) break;
+    if(Math.abs(next-s) < 1e-10){ s = next; break; }
+    s = next;
+  }
+  return s;
+}
+function cambioEstado(p){
+  const { a, sigmaB, gB, tB, gI, tI, E, alpha } = p;
+  const A = sigmaB - alpha*E*(tI-tB) - (a*a*gB*gB*E)/(24*sigmaB*sigmaB);
+  const B = (a*a*gI*gI*E)/24;
+  const s = resolverCubicaPositiva(A, B);
+  return { A,B, sigma:s };
+}
+function flechaCalc(a,g,sigma){ return (g*a*a)/(8*sigma); }
+
+function tablaTendido(c, zonaKey, a, antivibratorio){
+  const estados = ZONAS[zonaKey].estados;
+  const base = estados.find(e=>e.id==="tma") || estados[estados.length-1];
+  const t = TENSION_TMA[c.material];
+  const sigmaB = antivibratorio ? t.con : t.sin;
+  const gB = cargaEspecifica(c, base).g;
+  const filas = estados.map(e=>{
+    const ce = cargaEspecifica(c,e);
+    const { sigma } = cambioEstado({ a, sigmaB, gB, tB:base.temp, gI:ce.g, tI:e.temp, E:c.E, alpha:c.alpha });
+    return { estado:e.nombre, temp:e.temp, viento:e.viento, hielo:e.hielo, g:ce.g, sigma, tiro:sigma*c.seccionMecanica, flecha:flechaCalc(a,ce.g,sigma) };
+  });
+  const sigmaRoturaEspecifica = c.rotura / c.seccionMecanica;
+  const limite70 = 0.7 * sigmaRoturaEspecifica;
+  const limite25 = 0.25 * sigmaRoturaEspecifica;
+  const filaMax = filas.reduce((m,f)=> f.sigma>m.sigma?f:m, filas[0]);
+  const verifica70 = filaMax.sigma <= limite70;
+  const verifica25 = sigmaB <= limite25;
+  const coefSeguridadResultante = c.rotura / filaMax.tiro;
+  return { base, sigmaB, sigmaRoturaEspecifica, limite70, limite25, filaMax, verifica70, verifica25, coefSeguridadResultante, filas };
+}
+function tablaTesado(c, zonaKey, a, antivibratorio, temps){
+  const { base, sigmaB } = tablaTendido(c, zonaKey, a, antivibratorio);
+  const gB = cargaEspecifica(c, base).g;
+  const gI = c.peso / c.seccionMecanica;
+  return temps.map(t=>{
+    const { sigma } = cambioEstado({ a, sigmaB, gB, tB:base.temp, gI, tI:t, E:c.E, alpha:c.alpha });
+    return { temp:t, sigma, tiro:sigma*c.seccionMecanica, flecha:flechaCalc(a,gI,sigma) };
+  });
+}
+function tiroCima(tipo, tiroConductor, nFases, vientoEstructura, anguloGrados){
+  const T = tiroConductor*nFases;
+  let carga=0, formula="";
+  switch(tipo){
+    case "suspension":
+      carga=vientoEstructura;
+      formula="Fv (viento sobre conductores, tiros equilibrados)";
+      break;
+    case "angular":
+      carga = 2*T*Math.sin((anguloGrados*Math.PI/180)/2) + vientoEstructura;
+      formula="2·T·sen(α/2) + Fv";
+      break;
+    case "retencion": {
+      // NT 008/01 §8.11.4, hipótesis 3.1 (Retención tramo recto, tiros equilibrados):
+      // 3.1.a: solo viento transversal ; 3.1.b: 2/3 del tiro máx. unilateral (long.) + viento (transversal),
+      // combinados por composición vectorial (direcciones perpendiculares) — gobierna el mayor de los dos.
+      const S_a = vientoEstructura;
+      const longitudinal = (2/3)*T;
+      const S_b = Math.sqrt(longitudinal**2 + vientoEstructura**2);
+      carga = Math.max(S_a, S_b);
+      formula = carga===S_b
+        ? "√[(2/3·T)² + Fv²] (hip. 3.1.b, gobierna)"
+        : "Fv (hip. 3.1.a, gobierna — viento transversal solo)";
+      break;
+    }
+    case "terminal": {
+      // NT 008/01 §8.11.4, hipótesis 5 (Terminal): tiro total (long.) + viento (transversal),
+      // en direcciones perpendiculares → composición vectorial, igual que en el ejemplo oficial del Anexo.
+      carga = Math.sqrt(T**2 + vientoEstructura**2);
+      formula = "√[T² + Fv²] (composición vectorial, hip. 5.a/5.b)";
+      break;
+    }
+  }
+  return { carga, formula };
+}
+function esquemaApoyoSVG(H, hLibre, emp, diamFund, fMax, distSuelo, galibo, rienda){
+  const W = rienda ? 560 : 460, topPad = 24, botPad = 60;
+  const sv = 210 / H;                 // px por metro (vertical)
+  const groundY = topPad + hLibre*sv;
+  const baseY = groundY + emp*sv;
+  const poleX = 190;
+  const baseW = Math.max(26, diamFund*70);
+  const cimaY = topPad;
+  // punto más bajo real del conductor: a "distSuelo" metros por encima del piso (equivale a hLibre-fMax desde la cima)
+  const bajoCondY = topPad + (hLibre - distSuelo)*sv;
+  const dimX1 = 60, dimX2 = 95, dimX3 = 340;
+  const dimAnchoY = baseY + 26; // línea de cota horizontal, debajo de la zapata
+
+  function dim(x, y1, y2, label, color){
+    return `
+      <line x1="${x-4}" y1="${y1}" x2="${x+4}" y2="${y1}" stroke="${color}" stroke-width="1"/>
+      <line x1="${x-4}" y1="${y2}" x2="${x+4}" y2="${y2}" stroke="${color}" stroke-width="1"/>
+      <line x1="${x}" y1="${y1}" x2="${x}" y2="${y2}" stroke="${color}" stroke-width="1"/>
+      <text x="${x}" y="${(y1+y2)/2}" text-anchor="middle" font-size="9.5" fill="${color}" transform="rotate(-90 ${x} ${(y1+y2)/2})">${label}</text>`;
+  }
+  function dimH(y, x1, x2, label, color){
+    return `
+      <line x1="${x1}" y1="${y-4}" x2="${x1}" y2="${y+4}" stroke="${color}" stroke-width="1"/>
+      <line x1="${x2}" y1="${y-4}" x2="${x2}" y2="${y+4}" stroke="${color}" stroke-width="1"/>
+      <line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="${color}" stroke-width="1"/>
+      <text x="${(x1+x2)/2}" y="${y+12}" text-anchor="middle" font-size="9.5" fill="${color}">${label}</text>`;
+  }
+
+  let riendaSvg = "";
+  if(rienda){
+    // anclaje al costado izquierdo del poste, a "d" metros — escala horizontal propia para que entre en el dibujo
+    const dPx = Math.min(190, Math.max(60, rienda.d*sv*0.6));
+    const anchorX = poleX - dPx;
+    const anchorY = groundY;
+    const attachY = groundY - hLibre*sv; // altura de anclaje en el poste (≈ cima)
+    riendaSvg = `
+      <line x1="${poleX}" y1="${attachY}" x2="${anchorX}" y2="${anchorY}" stroke="#ffb454" stroke-width="2" stroke-dasharray="6 3"/>
+      <circle cx="${anchorX}" cy="${anchorY}" r="4" fill="#ffb454"/>
+      <path d="M ${anchorX-10} ${anchorY} L ${anchorX} ${anchorY+14} L ${anchorX+10} ${anchorY}" fill="rgba(255,180,84,0.25)" stroke="#ffb454" stroke-width="1"/>
+      <text x="${(poleX+anchorX)/2 - 6}" y="${(attachY+anchorY)/2 - 6}" text-anchor="middle" font-size="9" fill="#ffb454" transform="rotate(${-Math.atan2(anchorY-attachY, poleX-anchorX)*180/Math.PI} ${(poleX+anchorX)/2} ${(attachY+anchorY)/2})">rienda θ=${fmt(rienda.thetaDeg,0)}° · T≈${fmt(rienda.TwireFact,0)}kg</text>`;
+  }
+
+  return `
+  <svg viewBox="0 0 ${W} ${baseY+botPad}" style="width:100%;max-width:${rienda?620:520}px;height:auto;display:block;margin:0 auto;">
+    <defs>
+      <pattern id="hatch" width="6" height="6" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+        <line x1="0" y1="0" x2="0" y2="6" stroke="#2a3a4d" stroke-width="2"/>
+      </pattern>
+    </defs>
+    <rect x="0" y="${groundY}" width="${W}" height="${baseY+botPad-groundY}" fill="url(#hatch)" opacity="0.5"/>
+    <line x1="0" y1="${groundY}" x2="${W}" y2="${groundY}" stroke="#6b7f99" stroke-width="1.5"/>
+    <text x="${W-6}" y="${groundY-4}" text-anchor="end" font-size="9" fill="#9bb0c9">nivel de suelo</text>
+
+    <rect x="${poleX-baseW/2}" y="${groundY}" width="${baseW}" height="${baseY-groundY}" fill="rgba(75,156,255,0.12)" stroke="#4b9cff" stroke-width="1.2"/>
+    <text x="${poleX}" y="${(groundY+baseY)/2+3}" text-anchor="middle" font-size="8.5" fill="#8fc2ff" opacity="0.8">zapata / relleno</text>
+    <line x1="${poleX}" y1="${cimaY}" x2="${poleX}" y2="${groundY}" stroke="#4b9cff" stroke-width="4" stroke-linecap="round"/>
+
+    ${riendaSvg}
+
+    <path d="M ${poleX-140} ${cimaY+6} Q ${poleX} ${cimaY+6+fMax*sv*3} ${poleX+140} ${cimaY+6}" fill="none" stroke="#8fc2ff" stroke-width="1.3" stroke-dasharray="4 3"/>
+    <circle cx="${poleX}" cy="${cimaY+6}" r="2.5" fill="#e8eef7"/>
+
+    <line x1="0" y1="${bajoCondY}" x2="${W}" y2="${bajoCondY}" stroke="#4ade9b" stroke-width="1" stroke-dasharray="3 3" opacity="0.7"/>
+
+    ${dim(dimX1, cimaY, groundY, `H = ${fmt(H,2)} m (altura total)`, "#9bb0c9")}
+    ${dim(dimX2, cimaY, bajoCondY, `d = ${fmt(distSuelo,2)} m (al conductor, gálibo≥${galibo}m)`, "#4ade9b")}
+    ${dim(dimX3, groundY, baseY, `E = ${fmt(emp,2)} m`, "#ff8a9c")}
+    <text x="${dimX3+22}" y="${(groundY+baseY)/2}" font-size="9" fill="#ff8a9c">profundidad</text>
+    <text x="${dimX3+22}" y="${(groundY+baseY)/2+11}" font-size="9" fill="#ff8a9c">de zapata</text>
+    ${dimH(dimAnchoY, poleX-baseW/2, poleX+baseW/2, `Ø fundación = ${fmt(diamFund,2)} m`, "#ffd166")}
+    <text x="${poleX}" y="${dimAnchoY+22}" text-anchor="middle" font-size="9" fill="#ffd166">(ancho del entierro / relleno)</text>
+
+    <text x="${poleX}" y="${cimaY-8}" text-anchor="middle" font-size="9.5" fill="#8fc2ff">flecha máx. = ${fmt(fMax,3)} m (exagerada visualmente, ver valor real)</text>
+  </svg>`;
+}
+
+function verificacionEstructura(S,Ke,Kc,phi,Rc){
+  const solicitacion = Ke*Kc*S;
+  return { solicitacion, resistencia: phi*Rc, verifica: solicitacion<=phi*Rc };
+}
+// Cables de acero galvanizado típicos para riendas — valores comerciales de referencia
+// (NO tabulados por NT 008/01; catálogo genérico de fabricantes, coef. de seguridad recomendado ≥2 para riendas)
+const CABLES_RIENDA = [
+  { d:"4,76 mm (3/16\")", rotura:1500 },
+  { d:"6,35 mm (1/4\")",  rotura:2700 },
+  { d:"7,94 mm (5/16\")", rotura:4200 },
+  { d:"9,53 mm (3/8\")",  rotura:6000 },
+  { d:"11,11 mm (7/16\")",rotura:8000 },
+];
+function calcularRienda(S_fisica, S_factorizada, hAnclaje, thetaDeg){
+  const theta = thetaDeg*Math.PI/180;
+  const d = hAnclaje / Math.tan(theta);      // distancia horizontal de anclaje al pie del poste
+  const Lwire = hAnclaje / Math.sin(theta);  // longitud del cable de la rienda
+  const Twire = S_fisica / Math.cos(theta);         // tensión física requerida
+  const TwireFact = S_factorizada / Math.cos(theta);// tensión con coef. Ke·Kc aplicados (conservador)
+  const coefRienda = 2; // coeficiente de seguridad recomendado para riendas (criterio general, no NT 008/01)
+  const cableSugerido = CABLES_RIENDA.find(c => c.rotura >= TwireFact*coefRienda) || CABLES_RIENDA[CABLES_RIENDA.length-1];
+  return { theta, thetaDeg:thetaDeg, d, Lwire, Twire, TwireFact, coefRienda, cableSugerido };
+}
+
+function fundacion(H, tiroCimaKg, diamFund, pesoPoste, coefSeg, Ct, Cb, pesoEspSuelo){
+  const emp = H/10 + 0.6;
+  const hLibre = H - emp;
+  const Mv = tiroCimaKg*(hLibre + (2/3)*emp); // kg·m
+  const tgLimite = 0.01; // ángulo de giro máximo admitido, §8.11.6.3 pág. 17
+  const b = diamFund*100, t = emp*100; // cm
+  const Ct1 = Ct*emp/2, Cb1 = Cb*emp/2; // índice evaluado a la mitad del empotramiento, ejemplo oficial pág. 24
+  // Peso total resistente: poste + suelo desplazado en el volumen de empotramiento (aprox. cilíndrico)
+  const volSuelo = Math.PI*(diamFund/2)**2*emp;
+  const G = pesoPoste + volSuelo*pesoEspSuelo;
+  // Ángulos reales de giro bajo la carga actual (§8.11.6.3) — deben ser ≤ 0,01
+  const tgAlfa1 = (6*0.4*G)/(b*t*t*Ct1);
+  const tgAlfa2 = (2*G)/((b*b)*b*Cb1); // a=b=diamFund (aprox. circular/cuadrado equivalente)
+  // Momentos usando el LIMITE 0,01 como valor de diseño (igual que el ejemplo oficial EdERSA), en kg·m
+  const Ms = ((b*t**3)/36)*Ct1*tgLimite/100;
+  const Mb = (G*( (b/2) - 0.47*Math.sqrt(G/(b*Cb1*tgLimite)) ))/100;
+  const pMaxTerreno = Ct1 * t * tgLimite; // kg/cm² — presión límite (giro máximo admitido, §8.11.6.4)
+  const pMaxTerrenoReal = Ct1 * t * tgAlfa1; // kg/cm² — presión real con el giro que efectivamente ocurre
+  return { emp, hLibre, Mv, Ms, Mb, G, tgAlfa1, tgAlfa2, pMaxTerreno, pMaxTerrenoReal, tgLimite,
+    giroVerifica: tgAlfa1<=tgLimite && tgAlfa2<=tgLimite,
+    verifica: (Ms+Mb) > coefSeg*Mv };
+}
+function caidaTension(p){
+  const { trifasica, I, L, R, X, cosphi, Un, nTernas } = p;
+  const n = Math.max(1, nTernas||1);
+  const Refec = R/n, Xefec = X/n; // n ternas/circuitos en paralelo reparten la corriente y dividen la impedancia
+  const senphi = Math.sqrt(Math.max(0,1-cosphi*cosphi));
+  const Lkm = L/1000;
+  const dU = trifasica ? Math.sqrt(3)*I*Lkm*(Refec*cosphi+Xefec*senphi) : 2*I*Lkm*(Refec*cosphi+Xefec*senphi);
+  return { dU, pct:(dU/Un)*100, n, Refec, Xefec,
+    formula: trifasica ? "ΔU = √3·I·L·(R/n·cosφ + X/n·senφ)" : "ΔU = 2·I·L·(R/n·cosφ + X/n·senφ)" };
+}
+const fmt = (n,d=2)=> Number.isFinite(n) ? n.toLocaleString("es-AR",{minimumFractionDigits:d, maximumFractionDigits:d}) : "—";
+
+/* =========================================================================
+ * UI wiring
+ * ========================================================================= */
+
+const $ = (id)=>document.getElementById(id);
+
+// populate zona
+Object.entries(ZONAS).forEach(([k,v])=>{
+  const o=document.createElement("option"); o.value=k; o.textContent=v.nombre; $("zona").appendChild(o);
+});
+$("zona").value = "D2";
+
+// populate conductor
+CONDUCTORES.forEach((c,i)=>{
+  const o=document.createElement("option"); o.value=i; o.textContent=c.nombre; $("cond").appendChild(o);
+});
+$("cond").value = 2;
+
+// Tabla IV — ET 2001/00 EdERSA, pág. 14 de 15 (cargas de rotura IRAM 9531, todas las longitudes normalizadas)
+const TABLA_IV_ET2001 = {
+  5.00:  [ {d:10,rc:350},{d:11,rc:450},{d:12,rc:550} ],
+  6.00:  [ {d:10,rc:300},{d:11,rc:400},{d:12,rc:500},{d:13,rc:600} ],
+  7.00:  [ {d:10,rc:275},{d:11,rc:375},{d:12,rc:450},{d:13,rc:500},{d:14,rc:650} ],
+  7.50:  [ {d:10,rc:275},{d:11,rc:350},{d:12,rc:425},{d:13,rc:500},{d:14,rc:625},{d:15,rc:750},{d:16,rc:875} ],
+  8.00:  [ {d:10,rc:275},{d:11,rc:350},{d:12,rc:425},{d:13,rc:500},{d:14,rc:600},{d:15,rc:725},{d:16,rc:850} ],
+  9.00:  [ {d:10,rc:250},{d:11,rc:325},{d:12,rc:400},{d:13,rc:500},{d:14,rc:600},{d:15,rc:700},{d:16,rc:825} ],
+  10.00: [ {d:10,rc:250},{d:11,rc:325},{d:12,rc:400},{d:13,rc:475},{d:14,rc:575},{d:15,rc:675},{d:16,rc:800},{d:17,rc:875},{d:18,rc:1050},{d:19,rc:1175},{d:20,rc:1325} ],
+  11.00: [ {d:10,rc:250},{d:11,rc:325},{d:12,rc:400},{d:13,rc:475},{d:14,rc:575},{d:15,rc:650},{d:16,rc:750},{d:17,rc:850},{d:18,rc:975},{d:19,rc:1100},{d:20,rc:1250} ],
+  12.00: [ {d:10,rc:250},{d:11,rc:300},{d:12,rc:400},{d:13,rc:475},{d:14,rc:550},{d:15,rc:625},{d:16,rc:725},{d:17,rc:825},{d:18,rc:950},{d:19,rc:1075},{d:20,rc:1225} ],
+  13.00: [ {d:10,rc:250},{d:11,rc:300},{d:12,rc:375},{d:13,rc:450},{d:14,rc:525},{d:15,rc:600},{d:16,rc:700},{d:17,rc:800},{d:18,rc:925},{d:19,rc:1050},{d:20,rc:1175},{d:21,rc:1325},{d:22,rc:1475} ],
+  14.00: [ {d:10,rc:250},{d:11,rc:300},{d:12,rc:375},{d:13,rc:450},{d:14,rc:525},{d:15,rc:600},{d:16,rc:700},{d:17,rc:800},{d:18,rc:875},{d:19,rc:1025},{d:20,rc:1150},{d:21,rc:1300},{d:22,rc:1450} ],
+  15.00: [ {d:10,rc:250},{d:11,rc:300},{d:12,rc:375},{d:13,rc:425},{d:14,rc:500},{d:15,rc:600},{d:16,rc:675},{d:17,rc:775},{d:18,rc:850},{d:19,rc:1000},{d:20,rc:1125},{d:21,rc:1275},{d:22,rc:1425} ],
+  16.00: [ {d:10,rc:250},{d:11,rc:300},{d:12,rc:375},{d:13,rc:425},{d:14,rc:500},{d:15,rc:600},{d:16,rc:675},{d:17,rc:775},{d:18,rc:850},{d:19,rc:1000},{d:20,rc:1125},{d:21,rc:1275},{d:22,rc:1425},{d:23,rc:1525},{d:24,rc:1675} ],
+};
+// Tabla 8.5 — NT 008/01 pág. 16 de 27 (Ke sin ensayo, Kc, φ). Para postación de MADERA φ=0,5 siempre
+// (0,9/0,75/0,7 son exclusivos de hormigón armado). La norma no discrimina "Sostén angular" de "Sostén".
+const TABLA_85_MADERA = {
+  suspension: { nombre:"Sostén",          Ke:1.1, Kc:1.0, phi:0.5 },
+  angular:    { nombre:"Sostén angular (asimilado a Sostén — Tabla 8.5 no lo discrimina)", Ke:1.1, Kc:1.0, phi:0.5 },
+  retencion:  { nombre:"Retención",        Ke:1.1, Kc:1.2, phi:0.5 },
+  terminal:   { nombre:"Terminal",         Ke:1.1, Kc:1.2, phi:0.5 },
+};
+const TABLA_I_ET2001 = [
+  { L:7.00,  dcMin:120, dcMax:140, dE:160 },
+  { L:7.50,  dcMin:120, dcMax:140, dE:160 },
+  { L:8.00,  dcMin:140, dcMax:160, dE:180 },
+  { L:8.50,  dcMin:140, dcMax:160, dE:180 },
+  { L:9.00,  dcMin:140, dcMax:160, dE:190 },
+  { L:9.50,  dcMin:140, dcMax:160, dE:190 },
+  { L:10.00, dcMin:160, dcMax:180, dE:210 },
+  { L:11.00, dcMin:180, dcMax:200, dE:230 },
+  { L:12.00, dcMin:180, dcMax:200, dE:250 },
+  { L:13.00, dcMin:180, dcMax:200, dE:250 },
+  { L:14.00, dcMin:180, dcMax:200, dE:260 },
+  { L:15.00, dcMin:180, dcMax:200, dE:260 },
+  { L:16.00, dcMin:180, dcMax:200, dE:280 },
+  { L:17.00, dcMin:180, dcMax:200, dE:280 },
+];
+function filaTablaI(alturaPoste){
+  // toma la fila de igual o mayor longitud más cercana (conservador)
+  const ord = [...TABLA_I_ET2001].sort((a,b)=>a.L-b.L);
+  return ord.find(r=>r.L>=alturaPoste) || ord[ord.length-1];
+}
+function pesoPosteEstimado(alturaPoste, densidad){
+  const f = filaTablaI(alturaPoste);
+  const dc = (f.dcMin+f.dcMax)/2/1000; // promedio cima, m
+  const dE = f.dE/1000;                // empotramiento ≈ base, m
+  // volumen de tronco cónico: V = (π/12)·L·(D1²+D1·D2+D2²)
+  const V = (Math.PI/12) * alturaPoste * (dc*dc + dc*dE + dE*dE);
+  return { fila:f, dc, dE, V, peso: V*densidad };
+}
+
+// Tabla informativa de suelos — NT 008/01 EdERSA §8.11.6.5, pág. 18 de 27
+const SUELOS_NT008 = [
+  { id:"manual",  nombre:"Sin estudio de suelo (default Ct=4, sin verificar presión admisible)", presionAdm:null, ct:4,    pesoEsp:1700 },
+  { id:"laguna",  nombre:"Laguna, aguazal, pantano",              presionAdm:0.5, ct:0.75, pesoEsp:650  },
+  { id:"blando",  nombre:"Terrenos muy blandos",                  presionAdm:0.8, ct:0.75, pesoEsp:1700 },
+  { id:"arenaH",  nombre:"Arena fina húmeda",                     presionAdm:0.8, ct:1.5,  pesoEsp:1700 },
+  { id:"arcB",    nombre:"Arcilla blanda",                        presionAdm:0.8, ct:3,    pesoEsp:1700 },
+  { id:"arcSS",   nombre:"Arcilla semidura seca",                 presionAdm:1.8, ct:6,    pesoEsp:1700 },
+  { id:"arcFS",   nombre:"Arcilla fina seca",                     presionAdm:1.8, ct:8.5,  pesoEsp:1700 },
+  { id:"arcR",    nombre:"Arcilla rígida",                        presionAdm:3,   ct:11,   pesoEsp:1700 },
+  { id:"arenaG",  nombre:"Arena gruesa y pedregullo",              presionAdm:3,   ct:12,   pesoEsp:1700 },
+  { id:"arcGD",   nombre:"Arcilla gruesa dura",                   presionAdm:4,   ct:14.5, pesoEsp:1700 },
+  { id:"pedreg",  nombre:"Rígido pedregullo / canto rodado",       presionAdm:5,   ct:14.5, pesoEsp:1700 },
+];
+
+const GALIBOS_ET1005 = [
+  { label:"Acera / calle interior (poste) — 5,00 m", v:5 },
+  { label:"Avenida / ruta / camino rural — 6,00 m", v:6 },
+  { label:"Fachada / muro de edificio — 3,50 m", v:3.5 },
+  { label:"Ladera / terraplén ≥45°, no vehicular — 3,00 m", v:3 },
+];
+const galiboBtns = $("galiboBtns");
+GALIBOS_ET1005.forEach(g=>{
+  const b=document.createElement("button"); b.type="button"; b.textContent=g.label;
+  b.onclick=()=>{ $("galibo").value=g.v; render(); };
+  galiboBtns.appendChild(b);
+});
+
+SUELOS_NT008.forEach(s=>{
+  const o=document.createElement("option"); o.value=s.id; o.textContent=s.nombre; $("tipoSuelo").appendChild(o);
+});
+$("tipoSuelo").value = "manual";
+$("tipoSuelo").addEventListener("change", ()=>{
+  const s = SUELOS_NT008.find(x=>x.id===$("tipoSuelo").value);
+  if(s) $("ctSuelo").value = s.ct;
+  render();
+});
+
+const ANGULOS_RIENDA = [
+  { label:"30° (más eficiente, más espacio)", v:30 },
+  { label:"45° (típico)", v:45 },
+  { label:"60° (menos espacio, menos eficiente)", v:60 },
+];
+const riendaBtns = $("riendaBtns");
+ANGULOS_RIENDA.forEach(a=>{
+  const b=document.createElement("button"); b.type="button"; b.textContent=a.label;
+  b.onclick=()=>{ $("anguloRienda").value=a.v; render(); };
+  riendaBtns.appendChild(b);
+});
+
+function ok(b){ return `<span class="pill ${b?"ok":"bad"}">${b?"VERIFICA":"NO VERIFICA"}</span>`; }
+
+function Th(t){ return `<th>${t}</th>`; }
+function Td(t){ return `<td>${t}</td>`; }
+
+function updateAngleVisibility(){
+  $("anguloField").style.display = $("tipo").value === "angular" ? "block" : "none";
+}
+
+function render(){
+  const zonaKey = $("zona").value;
+  const c = CONDUCTORES[Number($("cond").value)];
+  const antivib = $("antivib").checked;
+
+  // conductor KV
+  $("condKv").innerHTML = `
+    <span>Sección nominal (fase)</span><b>${c.seccion} mm²</b>
+    <span>Sección mecánica (neutro portante, usada en cálculo)</span><b>${c.seccionMecanica} mm²</b>
+    <span>Diámetro</span><b>${c.diametro} mm</b>
+    <span>Peso</span><b>${c.peso} kg/m</b>
+    <span>E</span><b>${c.E} kg/mm²</b>
+    <span>α</span><b>${c.alpha.toExponential(1)} 1/°C</b>
+    <span>Rotura</span><b>${c.rotura} kg</b>
+    <span>R₂₀</span><b>${c.R20} Ω/km</b>
+    <span>X</span><b>${c.X} Ω/km</b>
+  `;
+
+  updateAngleVisibility();
+
+  const modo = $("modoTraza").value;
+  $("campoVanos").style.display = modo === "vanos" ? "block" : "none";
+  $("campoTotal").style.display = modo === "total" ? "block" : "none";
+  let vanos;
+  if(modo === "total"){
+    const Ltot = Math.max(0, Number($("longTotal").value) || 0);
+    const n = Math.max(1, Math.round(Number($("nVanos").value) || 1));
+    vanos = Array.from({length:n}, () => Ltot/n);
+  } else {
+    vanos = $("vanosTxt").value.split(/[,;\s]+/).map(Number).filter(n=>Number.isFinite(n) && n>0);
+  }
+  const ar = vanoRegulacion(vanos);
+  const L = vanos.reduce((a,b)=>a+b,0);
+  const aCalc = ar>0 ? ar : 40;
+
+  const tendido = tablaTendido(c, zonaKey, aCalc, antivib);
+  const tesado = tablaTesado(c, zonaKey, aCalc, antivib, [0,5,10,15,20,25,30,35]);
+
+  const estados = ZONAS[zonaKey].estados;
+  const estadoMax = estados.reduce((m,e)=> e.temp>m.temp?e:m);
+  const gMax = cargaEspecifica(c, estadoMax).g;
+  const sigmaMax = cambioEstado({
+    a:aCalc, sigmaB:tendido.sigmaB, gB:cargaEspecifica(c, tendido.base).g,
+    tB:tendido.base.temp, gI:gMax, tI:estadoMax.temp, E:c.E, alpha:c.alpha,
+  }).sigma;
+  const fMax = flechaCalc(aCalc, gMax, sigmaMax);
+
+  const alturaPoste = Number($("alturaPoste").value);
+  const alturaLibreEmp = alturaPoste - (alturaPoste/10 + 0.6);
+  const sepMensulas = Number($("sepMensulas").value) || 0; // mm, separación vertical entre ménsulas (dato de catálogo/plano EDERSA)
+  const nTernasGalibo = Math.max(1, Number($("nFases").value) || 1);
+  const alturaMensulaInferior = alturaLibreEmp - ((nTernasGalibo-1)*sepMensulas)/1000;
+  const distSuelo = alturaMensulaInferior - fMax;
+  const galibo = Number($("galibo").value);
+
+  const estadoViento = estados.find(e=>e.viento>0);
+  const vc = vientoSobreConductor(estadoViento.viento, c.diametro);
+  const filaViento = tendido.filas.find(f=>f.estado===estadoViento.nombre);
+  const diamPoste = Number($("diamPoste").value) || 0.18;
+  const vientoEstructura = (1*0.7*vc.q*(diamPoste*alturaLibreEmp));
+  const nFases = Number($("nFases").value);
+  const tipo = $("tipo").value;
+  const angulo = Number($("angulo").value);
+  const tiro = tiroCima(tipo, filaViento.tiro, nFases, vientoEstructura + vc.carga*aCalc*nFases, angulo);
+
+  const Ke=Number($("Ke").value), Kc=Number($("Kc").value), phi=Number($("phi").value), Rc=Number($("Rc").value);
+  const verif = verificacionEstructura(tiro.carga, Ke, Kc, phi, Rc);
+
+  const t85 = TABLA_85_MADERA[tipo];
+  const t85BtnsEl = $("Tabla85Btns");
+  t85BtnsEl.innerHTML = "";
+  if(t85){
+    $("Tabla85Help").innerHTML = `Tabla 8.5 (madera, sin ensayo) para "${t85.nombre}": Ke=${t85.Ke} · Kc=${t85.Kc} · φ=${t85.phi}`;
+    const b85=document.createElement("button"); b85.type="button";
+    b85.textContent = `Aplicar Ke=${t85.Ke} / Kc=${t85.Kc} / φ=${t85.phi}`;
+    b85.onclick = () => { $("Ke").value=t85.Ke; $("Kc").value=t85.Kc; $("phi").value=t85.phi; render(); };
+    t85BtnsEl.appendChild(b85);
+  }
+
+  const filaRc = TABLA_IV_ET2001[Number(alturaPoste)];
+  const RcBtnsEl = $("RcBtns");
+  RcBtnsEl.innerHTML = "";
+  if(filaRc){
+    $("RcHelp").innerHTML = `Valores confirmados de Tabla IV para poste de ${fmt(alturaPoste,2)} m (pág. 14 de 15):`;
+    filaRc.forEach(f=>{
+      const b=document.createElement("button"); b.type="button";
+      b.textContent = `Ø${f.d}cm → ${f.rc} kg`;
+      b.onclick = () => { $("Rc").value = f.rc; render(); };
+      RcBtnsEl.appendChild(b);
+    });
+  } else {
+    $("RcHelp").innerHTML = `No hay valores de Tabla IV cargados todavía para ${fmt(alturaPoste,2)} m en esta herramienta — consultar la Tabla IV del PDF (pág. 14) según Ø cima real, o pasar los valores para agregarlos.`;
+  }
+
+  const diamFund=Number($("diamFund").value);
+  const densidadMadera = Number($("densidadMadera").value) || 950;
+  const estPeso = pesoPosteEstimado(alturaPoste, densidadMadera);
+  $("pesoPosteHelp").innerHTML = `Estimado por volumen (NO normativo): Ø cima≈${fmt(estPeso.dc*1000,0)}mm / Ø base≈${fmt(estPeso.dE*1000,0)}mm (fila ${fmt(estPeso.fila.L,2)}m, Tabla I ET 2001/01 pág.13) × ${densidadMadera} kg/m³ ≈ <b style="color:var(--ink)">${fmt(estPeso.peso,0)} kg</b>`;
+  const pesoPosteBtnsEl = $("pesoPosteBtns");
+  pesoPosteBtnsEl.innerHTML = "";
+  const bPeso = document.createElement("button"); bPeso.type="button";
+  bPeso.textContent = `Usar estimado (${fmt(estPeso.peso,0)} kg)`;
+  bPeso.onclick = () => { $("pesoPoste").value = Math.round(estPeso.peso); render(); };
+  pesoPosteBtnsEl.appendChild(bPeso);
+
+  const pesoPoste=Number($("pesoPoste").value);
+  const ctSuelo=Number($("ctSuelo").value), coefFund=Number($("coefFund").value);
+  const suelo = SUELOS_NT008.find(s=>s.id===$("tipoSuelo").value) || SUELOS_NT008[0];
+  const fund = fundacion(alturaPoste, tiro.carga, diamFund, pesoPoste, coefFund, ctSuelo, ctSuelo, suelo.pesoEsp);
+
+  const usarRienda = $("usarRienda").checked;
+  const anguloRienda = Number($("anguloRienda").value) || 45;
+  const rienda = calcularRienda(tiro.carga, verif.solicitacion, fund.hLibre, anguloRienda);
+
+
+  const trifasica = $("trifasica").value === "3";
+  const I=Number($("I").value), cosphi=Number($("cosphi").value), Un=Number($("Un").value), limite=Number($("limite").value);
+  const cdt = caidaTension({ trifasica, I, L, R:c.R20, X:c.X, cosphi, Un, nTernas: nFases });
+
+  const presionVerif = suelo.presionAdm!=null ? (fund.pMaxTerrenoReal<=suelo.presionAdm) : null;
+  const puntosFinales = [
+    { label:"Conductor — 25% rotura a T.m.a. (§8.6.2.a)", ok:tendido.verifica25 },
+    { label:"Conductor — 70% rotura estado más exigente (§8.6.2.b)", ok:tendido.verifica70 },
+    { label:`Gálibo ≥ ${galibo} m (distancia al suelo)`, ok:distSuelo>=galibo },
+    { label:"Estructura — Ke·Kc·S ≤ φ·Rc (§8.11.5)", ok:verif.verifica },
+    { label:"Fundación — Ms+Mb > s·Mv (§8.11.6.2)", ok:fund.verifica },
+    { label:"Fundación — ángulo de giro tg α ≤ 0,01 (§8.11.6.3)", ok:fund.giroVerifica },
+    ...(presionVerif!=null ? [{ label:"Presión sobre el terreno ≤ admisible (§8.11.6.4)", ok:presionVerif }] : []),
+    { label:`Caída de tensión ΔU ≤ ${limite}%`, ok:cdt.pct<=limite },
+  ];
+  const puntosFallando = puntosFinales.filter(p=>!p.ok).length;
+
+  const svgW = Math.max(400, L*4+80);
+  let x = 40; let svgNodes = "";
+  vanos.forEach((v,i)=>{
+    const x0=x, x1=x+v*4;
+    svgNodes += `
+      <g>
+        <line x1="${x0}" y1="120" x2="${x0}" y2="40" stroke="#4b9cff" stroke-width="3"/>
+        <path d="M ${x0} 45 Q ${(x0+x1)/2} ${45+fMax*18} ${x1} 45" fill="none" stroke="#8fc2ff" stroke-width="1.5"/>
+        <text x="${(x0+x1)/2}" y="135" text-anchor="middle" font-size="10" fill="#9bb0c9">${fmt(v,1)} m</text>
+        <text x="${x0}" y="32" text-anchor="middle" font-size="10" fill="#e8eef7">P${i+1}</text>
+      </g>`;
+    x = x1;
+  });
+  svgNodes += `
+    <g>
+      <line x1="${x}" y1="120" x2="${x}" y2="40" stroke="#4b9cff" stroke-width="3"/>
+      <text x="${x}" y="32" text-anchor="middle" font-size="10" fill="#e8eef7">P${vanos.length+1}</text>
+    </g>`;
+
+  const html = `
+    <div class="card card-final">
+      <h2>✔ Resultado final — lo que vas a presentar a EDERSA</h2>
+      <p class="ref">Junta el veredicto de cada verificación de más abajo en un solo lugar. Si algo cambia de color acá, cambió en alguna tarjeta de la página — bajá a esa sección (usá los accesos de arriba) para ver el detalle y corregir.</p>
+      <p class="final-verdict ${puntosFallando===0 ? 'ok':'bad'}">${puntosFallando===0 ? '✔ TODO VERIFICA' : `✗ ${puntosFallando} de ${puntosFinales.length} punto${puntosFallando>1?'s':''} SIN VERIFICAR`}</p>
+      <div class="final-grid">
+        ${puntosFinales.map(p=>`
+          <div class="final-item ${p.ok?'ok':'bad'}">
+            <span class="fi-dot"></span>
+            <span class="fi-label">${p.label}</span>
+            <span class="fi-val">${p.ok?'VERIFICA':'NO VERIFICA'}</span>
+          </div>`).join("")}
+      </div>
+    </div>
+
+    <div class="group-label" id="grp-mecanica">Mecánica del conductor</div>
+    <div class="card">
+      <h2>A) Vano de regulación</h2>
+      <p class="ref">Fuente: <b>NT 008/01 EdERSA</b>, §9.4 "Vano de Regulación" — pág. 21 de 27</p>
+      <p class="formula">ar = √(Σa³ / Σa)</p>
+      <div class="stats">
+        <div class="stat"><div class="l">Vanos</div><div class="v">${vanos.length}</div></div>
+        <div class="stat"><div class="l">Postes</div><div class="v">${vanos.length+1}</div></div>
+        <div class="stat"><div class="l">Longitud total</div><div class="v">${fmt(L,1)} m</div></div>
+        <div class="stat"><div class="l">ar</div><div class="v accent">${fmt(ar,2)} m</div></div>
+      </div>
+      <p class="formula" style="margin-top:8px;">Σa³ = ${fmt(vanos.reduce((a,v)=>a+v**3,0),0)} m³ · Σa = ${fmt(L,1)} m</p>
+    </div>
+
+    <div class="card">
+      <h2>C) Presión del viento sobre el conductor</h2>
+      <p class="ref">Fuente: <b>NT 008/01 EdERSA</b>, §8.4 "Presiones debidas al viento" y Tabla 8.4 (coef. C) — pág. 3–4 de 27</p>
+      <p class="formula">V = K·C·q·F ; q = v²/16 (NT 008/01 §8.4, Tabla 8.4)</p>
+      <div class="tbl-wrap"><table>
+        <thead><tr>${Th("v [km/h]")}${Th("v [m/s]")}${Th("K")}${Th("C")}${Th("q [kg/m²]")}${Th("F [m²/m]")}${Th("V [kg/m]")}</tr></thead>
+        <tbody><tr>
+          ${Td(estadoViento.viento)}${Td(fmt(vc.v))}${Td(vc.K)}${Td(vc.C)}${Td(fmt(vc.q))}${Td(fmt(vc.F,4))}${Td(fmt(vc.carga,3))}
+        </tr></tbody>
+      </table></div>
+    </div>
+
+    <div class="card">
+      <h2>B) Tabla de tendido por estado (cambio de estado)</h2>
+      <p class="ref">Fuente: <b>NT 008/01 EdERSA</b> — Tabla 8.2 (estados climáticos D1/D2) pág. 3 · §9.3 "Ecuación Cambio de Estado" pág. 21 · §8.6.3 (σ base T.m.a.) · §8.6.2.a (límite 25% rotura a T.m.a.) y §8.6.2.b (límite 70% rotura en estado más exigente) pág. 5 de 27</p>
+      <p class="formula">σ³ − A·σ² = B ; A = σb − αE(tᵢ−tb) − (a²gb²E)/(24σb²) ; B = (a²gᵢ²E)/24</p>
+      <p style="font-size:11.5px;color:var(--ink-soft);margin:0 0 8px;">
+        Estado base normativo (§8.6.3): <b style="font-family:var(--body);color:var(--ink);">${tendido.base.nombre}</b> ·
+        σ base a T.m.a. (Tabla 8.6.3, ${antivib?"con":"sin"} antivibratorio) = ${fmt(tendido.sigmaB,2)} kg/mm² · vano de cálculo a = ${fmt(aCalc,2)} m
+      </p>
+      <div class="tbl-wrap"><table>
+        <thead><tr>${Th("Estado")}${Th("t [°C]")}${Th("Viento [km/h]")}${Th("Hielo [mm]")}${Th("g [kg/m·mm²]")}${Th("σ [kg/mm²]")}${Th("Tiro [kg]")}${Th("Flecha [m]")}</tr></thead>
+        <tbody>
+          ${tendido.filas.map(f=>`
+            <tr class="${f.estado===tendido.filaMax.estado?"hi":""}">
+              ${Td(f.estado)}${Td(f.temp)}${Td(f.viento)}${Td(f.hielo)}
+              ${Td(f.g.toExponential(3))}${Td(fmt(f.sigma))}${Td(fmt(f.tiro,1))}${Td(fmt(f.flecha,3))}
+            </tr>`).join("")}
+        </tbody>
+      </table></div>
+      <div class="stats" style="margin-top:10px;border-top:1px solid var(--rule);padding-top:10px;">
+        <div class="stat"><div class="l">σ rotura específica</div><div class="v">${fmt(tendido.sigmaRoturaEspecifica)} kg/mm²</div></div>
+        <div class="stat"><div class="l">Límite 25% a T.m.a. (§8.6.2.a)</div><div class="v">${fmt(tendido.limite25)} kg/mm²</div></div>
+        <div class="stat"><div class="l">σ base (T.m.a.)</div><div class="v">${fmt(tendido.sigmaB)} kg/mm²</div></div>
+        <div class="stat"><div class="l">Verificación 25%</div><div class="v">${ok(tendido.verifica25)}</div></div>
+        <div class="stat"><div class="l">Límite 70% (§8.6.2.b)</div><div class="v">${fmt(tendido.limite70)} kg/mm²</div></div>
+        <div class="stat"><div class="l">σ máx. (${tendido.filaMax.estado})</div><div class="v">${fmt(tendido.filaMax.sigma)} kg/mm²</div></div>
+        <div class="stat"><div class="l">Verificación 70%</div><div class="v">${ok(tendido.verifica70)}</div></div>
+      </div>
+      ${!tendido.verifica25 ? `<p class="note warn">No verifica §8.6.2.a: la tensión base a T.m.a. de Tabla 8.6.3 (${fmt(tendido.sigmaB,2)} kg/mm²) supera el 25% de la rotura específica de <b>este</b> conductor (${fmt(tendido.limite25,2)} kg/mm²). Puede indicar que el dato de "Rotura" cargado para este conductor es más bajo que el real de fábrica — confirmar contra la ficha IRAM/proveedor antes de presentar el cálculo.</p>` : ""}
+      <p class="note">Coeficiente de seguridad resultante del conductor (rotura / tiro máximo) = ${fmt(tendido.coefSeguridadResultante)}</p>
+    </div>
+
+    <div class="card">
+      <h2>Separación mínima entre haces / conductores</h2>
+      <p class="ref">Fuente: <b>EPEC ET 1005</b>, §5.5 "Tendido y Ubicación de los Conductores" — pág. 10 de 13</p>
+      <p style="margin:0;">Cuando dos haces de conductores se cruzan, la distancia entre ellos debe ser ≥ <b>0,20 m</b>. Este valor es fijo por norma y no depende del vano ni de la flecha calculada arriba; verificalo en el punto físico del cruce, no en el tramo recto.</p>
+    </div>
+
+    <div class="card">
+      <h2>Tabla de tesado en obra (sin viento)</h2>
+      <p class="ref">Fuente: <b>NT 008/01 EdERSA</b>, misma ecuación de cambio de estado §9.3 (pág. 21) resuelta a viento nulo para distintas temperaturas de montaje</p>
+      <p class="formula">f = g·a² / (8·σ)</p>
+      <div class="tbl-wrap"><table>
+        <thead><tr>${Th("t [°C]")}${Th("σ [kg/mm²]")}${Th("Tiro [kg]")}${Th("Flecha [m]")}</tr></thead>
+        <tbody>${tesado.map(r=>`<tr>${Td(r.temp)}${Td(fmt(r.sigma))}${Td(fmt(r.tiro,1))}${Td(fmt(r.flecha,3))}</tr>`).join("")}</tbody>
+      </table></div>
+      <p class="note warn"><b>Auditoría contra el ejemplo oficial del Anexo (pág. 22-23):</b> con esta fórmula parabólica simple, la flecha calculada da sistemáticamente ~3-4% por debajo de la tabla de tesado publicada por EDERSA en su propio ejemplo (ej.: 0,529m calculado vs 0,55m tabulado, mismo vano y tensión). No se identificó la causa exacta en las páginas disponibles — probablemente EDERSA aplica algún margen adicional de tesado en obra no explicitado en el texto. Para valores de campo definitivos, contrastar contra la tabla de tendido específica que emita EDERSA para tu proyecto, no solo este cálculo teórico.</p>
+    </div>
+
+    <div class="group-label" id="grp-estructura">Estructura, poste y fundación</div>
+    <div class="card">
+      <h2>D) Flecha máxima y verificación de gálibo</h2>
+      <p class="ref">Fuente: <b>NT 008/01 EdERSA</b> §8.8 "Flechas Máximas de los Cables" pág. 6 (criterio T. máx. sin viento) · Gálibo mínimo exigido: <b>EPEC ET 1005</b> §4.7 "Altura Libre Mínima" pág. 6 de 13 · Separación entre ménsulas: dato de catálogo/plano EDERSA (no normativo en los PDF disponibles)</p>
+      <p class="formula">fmáx a t máx sin viento ; hlibre = H − E ; hménsula inf. = hlibre − (n−1)·sep ; d = hménsula inf. − fmáx</p>
+      <div class="stats">
+        <div class="stat"><div class="l">Flecha máx.</div><div class="v">${fmt(fMax,3)} m</div></div>
+        <div class="stat"><div class="l">Altura libre (H−E)</div><div class="v">${fmt(alturaLibreEmp,2)} m</div></div>
+        <div class="stat"><div class="l">Altura ménsula más baja (n=${nTernasGalibo})</div><div class="v">${fmt(alturaMensulaInferior,2)} m</div></div>
+        <div class="stat"><div class="l">Distancia al suelo</div><div class="v">${fmt(distSuelo,2)} m</div></div>
+        <div class="stat"><div class="l">Gálibo ≥ ${galibo} m</div><div class="v">${ok(distSuelo>=galibo)}</div></div>
+      </div>
+      ${nTernasGalibo>1 ? `<p class="note warn">Con ${nTernasGalibo} ternas apiladas (separación ${sepMensulas}mm entre ménsulas), el gálibo se verifica en la terna MÁS BAJA, no en la de arriba — por eso se descontaron ${((nTernasGalibo-1)*sepMensulas/1000).toFixed(3)} m de la altura libre antes de restar la flecha.</p>` : ""}
+    </div>
+
+    <div class="card">
+      <h2>E · F) Tiro en la cima y verificación de la estructura</h2>
+      <p class="ref">Fuente: <b>NT 008/01 EdERSA</b> §8.11.4 (hipótesis de cálculo por tipo de soporte) pág. 8–14 · §8.11.5 "Dimensionamiento de Estructuras", condición Ke·Kc·S ≤ φ·Rc y Tabla 8.5 (valores Ke, Kc, φ) pág. 15–16 · Rc del poste de madera: <b>ET 2001/01 EdERSA</b> Tabla IV (IRAM 9531) pág. 14 de 15</p>
+      <p class="note warn"><b>Corrección de auditoría:</b> versiones anteriores sumaban el tiro y el viento en forma aritmética (T+Fv) y usaban 0,5·T para Retención. El texto de §8.11.4 especifica <b>2/3·T</b> para la hipótesis 3.1.b, y tiro/viento actúan en direcciones perpendiculares entre sí, por lo que corresponde <b>composición vectorial</b> √(long²+transv²) — igual criterio que usa el propio ejemplo oficial del Anexo para Terminal. No incluye el factor "He" (conductores equivalentes en la cima) del ejemplo oficial por no contar con su fórmula de origen validada — para n&gt;1 ternas esto puede subestimar levemente el efecto de alturas de ménsula distintas. <b>Además</b>, el φ=0,9 que traía por defecto esta tarjeta era el de hormigón armado: para madera, Tabla 8.5 exige φ=0,5 — usá el botón "Aplicar Tabla 8.5" de la tarjeta 3 si todavía no lo cargaste.</p>
+      <p class="formula">S = ${tiro.formula} ; Ke·Kc·S ≤ φ·Rc</p>
+      <div class="stats">
+        <div class="stat"><div class="l">Solicitación S</div><div class="v">${fmt(tiro.carga,1)} kg</div></div>
+        <div class="stat"><div class="l">Ke·Kc·S</div><div class="v">${fmt(verif.solicitacion,1)} kg</div></div>
+        <div class="stat"><div class="l">φ·Rc</div><div class="v">${fmt(verif.resistencia,1)} kg</div></div>
+        <div class="stat"><div class="l">Resultado</div><div class="v">${ok(verif.verifica)}</div></div>
+      </div>
+      ${t85 && Math.abs(phi-t85.phi)>0.001 ? `<p class="note warn">⚠ El φ cargado (${fmt(phi,2)}) no coincide con el de Tabla 8.5 para madera / "${t85.nombre}" (φ=${t85.phi}). Si tu poste es de madera, corregilo con el botón "Aplicar Tabla 8.5" de la tarjeta 3 antes de presentar el cálculo a EDERSA.</p>` : ""}
+      ${!verif.verifica ? `<p class="note warn">No verifica: adoptá un poste de mayor resistencia de cima, reducí el vano, o agregá riendas/puntal en la estructura.</p>` : ""}
+    </div>
+
+    ${usarRienda ? `
+    <div class="card">
+      <h2>Rienda / tensor — dimensionamiento</h2>
+      <p class="ref">Cálculo de ingeniería general (descomposición de fuerzas), <b>NO tabulado por NT 008/01</b> — la norma no trae una sección específica de riendas. Coef. de seguridad de rienda (≥2) y cables de referencia: catálogo comercial genérico, no normativo EDERSA.</p>
+      <p class="formula">T_rienda = S / cos θ ; d = h_anclaje / tan θ ; L_cable = h_anclaje / sen θ</p>
+      <div class="stats">
+        <div class="stat"><div class="l">Ángulo θ (respecto al suelo)</div><div class="v">${fmt(anguloRienda,0)}°</div></div>
+        <div class="stat"><div class="l">Altura de anclaje en el poste</div><div class="v">${fmt(fund.hLibre,2)} m</div></div>
+        <div class="stat"><div class="l">Distancia horizontal al anclaje</div><div class="v">${fmt(rienda.d,2)} m</div></div>
+        <div class="stat"><div class="l">Longitud del cable</div><div class="v">${fmt(rienda.Lwire,2)} m</div></div>
+        <div class="stat"><div class="l">Tensión física (S sin factorizar)</div><div class="v">${fmt(rienda.Twire,1)} kg</div></div>
+        <div class="stat"><div class="l">Tensión de diseño (con Ke·Kc)</div><div class="v accent">${fmt(rienda.TwireFact,1)} kg</div></div>
+        <div class="stat"><div class="l">Con coef. seg. rienda (×${rienda.coefRienda})</div><div class="v">${fmt(rienda.TwireFact*rienda.coefRienda,1)} kg</div></div>
+        <div class="stat"><div class="l">Cable sugerido (rotura ≥ req.)</div><div class="v" style="font-size:13px;">${rienda.cableSugerido.d} (${rienda.cableSugerido.rotura} kg)</div></div>
+      </div>
+      <p class="note warn">Requiere espacio libre de ${fmt(rienda.d,2)} m al costado del poste para el anclaje, y una fundación/muerto para la rienda dimensionado aparte (no calculado acá) según el tipo de suelo real. Esto reduce la solicitación que debe resistir el poste por flexión, pero <b>no reemplaza</b> verificar igual la tarjeta E·F con el aporte real de la rienda si se hace un análisis más fino (aquí se dimensiona la rienda para tomar la totalidad de S, del lado conservador).</p>
+    </div>` : ""}
+
+    <div class="card">
+      <h2>G) Fundación / empotramiento</h2>
+      <p class="ref">Fuente: <b>NT 008/01 EdERSA</b> §8.11.7.3 (empotramiento directo, E=H/10+0,60m) pág. 19 · §8.11.6.1/.2/.3 (método Sulzberger/Mohr, coef. seguridad al vuelco 1,5 normal/1,2 excepcional, ángulo de giro ≤0,01) pág. 17 · §8.11.6.5 (Ct=Cb, evaluado a mitad de empotramiento) pág. 18 de 27 · Fórmulas Ms/Mb y valores de referencia validados contra el ejemplo resuelto oficial del Anexo, pág. 24-25 de 27</p>
+      <p class="formula">Ms = b·t³·Ct1·tgα/36 ; Mb = G·(b/2 − 0,47·√(G/(b·Cb1·tgα))) ; tgα=0,01 (límite) ; condición: Ms+Mb &gt; s·Mv</p>
+      <div class="stats">
+        <div class="stat"><div class="l">Empotramiento (E)</div><div class="v">${fmt(fund.emp,2)} m</div></div>
+        <div class="stat"><div class="l">Peso resistente G</div><div class="v">${fmt(fund.G,1)} kg</div></div>
+        <div class="stat"><div class="l">Mv (vuelco)</div><div class="v">${fmt(fund.Mv/1000,3)} tm</div></div>
+        <div class="stat"><div class="l">Ms + Mb</div><div class="v">${fmt((fund.Ms+fund.Mb)/1000,3)} tm</div></div>
+        <div class="stat"><div class="l">tg α₁ (giro por Ms) ≤0,01</div><div class="v" style="font-size:13px;">${fmt(fund.tgAlfa1,4)} ${fund.tgAlfa1<=0.01?"✓":"✗"}</div></div>
+        <div class="stat"><div class="l">tg α₂ (giro por Mb) ≤0,01</div><div class="v" style="font-size:13px;">${fmt(fund.tgAlfa2,4)} ${fund.tgAlfa2<=0.01?"✓":"✗"}</div></div>
+        <div class="stat"><div class="l">s = ${coefFund}</div><div class="v">${ok(fund.verifica)}</div></div>
+      </div>
+      <p class="note warn">Ct = Cb = ${ctSuelo} kg/cm³ (a 2 m de profundidad, s/estudio de suelo NT 008/01 §8.11.6.5 → default 4), evaluado a Ct₁=Ct·E/2 según el método del Anexo oficial. G incluye peso del poste + suelo desplazado en el volumen de empotramiento (γ suelo=${suelo.pesoEsp} kg/m³ del tipo de terreno elegido). Adaptación de la fórmula rectangular (a×b) del ejemplo oficial —pensado para postación de hormigón con zapata— a un poste de madera de sección circular empotrado directo (a=b=Ø fundación). <b>No reemplaza</b> el cálculo de fundación con estudio de suelo real firmado por un profesional matriculado, previo a la obra.</p>
+      ${Math.abs(diamFund-fund.emp)<0.05 ? `<p class="note warn"><b>⚠ Revisar dato:</b> Ø fundación (${fmt(diamFund,2)}m) es casi idéntico al empotramiento E (${fmt(fund.emp,2)}m) — es un error común confundir ambos campos. Ø fundación es el ANCHO del pozo/entierro (típicamente 0,50–0,80m para un poste de madera empotrado directo), NO la profundidad. Un pozo de ${fmt(diamFund,2)}m de diámetro no es constructivamente realista.</p>` : ""}
+      <p class="note warn"><b>Corrección de cálculo (auditoría):</b> hasta esta versión, la fórmula de Ms tenía un error de conversión de unidades (dividía por 100.000 en vez de 100), lo que devolvía momentos ~1000 veces menores a los reales y forzaba fundaciones más grandes de lo necesario. Se validó la fórmula corregida contra el ejemplo oficial de EDERSA (Anexo, pág. 24-25) con coincidencia exacta. Si veías "NO VERIFICA" con Ø fundación grande en sesiones anteriores, volvé a probar — es posible que ahora alcance con una fundación más chica.</p>
+    </div>
+
+    <div class="card">
+      <h2>G.1) Presión máxima sobre el terreno</h2>
+      <p class="ref">Fuente: <b>NT 008/01 EdERSA</b> §8.11.6.4 "Cargas máximas sobre el terreno" pág. 17 · Presión Admisible por tipo de suelo: §8.11.6.5, tabla informativa, pág. 18 de 27</p>
+      <p class="formula">p = Ct₁ · t(emp,cm) · tg α ; condición: p ≤ Presión Admisible</p>
+      <div class="stats">
+        <div class="stat"><div class="l">Presión real (tg α₁ actual)</div><div class="v accent">${fmt(fund.pMaxTerrenoReal,2)} kg/cm²</div></div>
+        <div class="stat"><div class="l">Presión límite (tg α=0,01)</div><div class="v">${fmt(fund.pMaxTerreno,2)} kg/cm²</div></div>
+        <div class="stat"><div class="l">Presión admisible</div><div class="v">${suelo.presionAdm!=null ? fmt(suelo.presionAdm,2)+" kg/cm²" : "— (sin estudio)"}</div></div>
+        <div class="stat"><div class="l">Suelo seleccionado</div><div class="v" style="font-size:12px;">${suelo.nombre}</div></div>
+        <div class="stat"><div class="l">Resultado (vs. presión real)</div><div class="v">${suelo.presionAdm!=null ? ok(fund.pMaxTerrenoReal<=suelo.presionAdm) : `<span class="pill" style="background:rgba(75,156,255,0.15);color:var(--accent-soft);">SIN VERIFICAR</span>`}</div></div>
+      </div>
+      ${suelo.presionAdm==null ? `<p class="note warn">Elegí un tipo de terreno arriba (campo "Tipo de terreno") para comparar contra la Presión Admisible tabulada, o cargá el valor de un estudio de suelo real.</p>` : ""}
+      <p class="note warn">La <b>presión real</b> usa el ángulo de giro que realmente ocurre con la carga actuante (tg α₁, tarjeta G). La <b>presión límite</b> es la que se alcanzaría si el apoyo rotara hasta el máximo admitido (tg α=0,01) — es un techo de diseño, no la condición real, y compararla contra la presión admisible tabulada casi siempre da un falso "NO VERIFICA" cuando la fundación está bien dimensionada. Usar la presión real para la verificación contra suelo; la presión límite es solo de referencia.</p>
+    </div>
+
+    <div class="card">
+      <h2>Esquema acotado del apoyo (poste + fundación + flecha)</h2>
+      <p class="ref">Cotas: H y E — NT 008/01 §8.11.7.3 pág. 19 · d (distancia al conductor) y gálibo — §8.8 pág. 6 y ET 1005 §4.7 pág. 6 · Ø fundación — dato cargado en el formulario</p>
+      ${esquemaApoyoSVG(alturaPoste, fund.hLibre, fund.emp, diamFund, fMax, distSuelo, galibo, usarRienda ? rienda : null)}
+      <p style="margin:8px 0 0;font-size:10.5px;color:var(--ink-soft);text-align:center;">Esquema ilustrativo, no a escala exacta entre magnitudes muy distintas (Ø fundación y flecha se exageraron para que se vean). Los valores numéricos de cada cota sí son los calculados en las tarjetas D) y G) de arriba.</p>
+    </div>
+
+    <div class="group-label" id="grp-electrico">Eléctrico</div>
+    <div class="card">
+      <h2>H) Caída de tensión</h2>
+      <p class="ref">Fórmula estándar de caída de tensión (criterio general de proyecto BT/MT). Corrección por n° de ternas en paralelo: cada terna adicional reparte la corriente y reduce la impedancia efectiva en 1/n — mismo criterio que usa la sección eléctrica de tu planilla real (ej. 7 ternas en 900m).</p>
+      <p class="formula">${cdt.formula} ; n = ${cdt.n} terna(s)</p>
+      <div class="stats">
+        <div class="stat"><div class="l">L</div><div class="v">${fmt(L,1)} m</div></div>
+        <div class="stat"><div class="l">N° ternas en paralelo</div><div class="v">${cdt.n}</div></div>
+        <div class="stat"><div class="l">R efectiva / km</div><div class="v">${fmt(cdt.Refec,4)} Ω</div></div>
+        <div class="stat"><div class="l">ΔU</div><div class="v">${fmt(cdt.dU,2)} V</div></div>
+        <div class="stat"><div class="l">ΔU %</div><div class="v accent">${fmt(cdt.pct,2)} %</div></div>
+        <div class="stat"><div class="l">Límite ${limite}%</div><div class="v">${ok(cdt.pct<=limite)}</div></div>
+      </div>
+    </div>
+
+    <div class="group-label" id="grp-trazado">Trazado y documentación</div>
+    <div class="card">
+      <h2>I) Croquis del trazado</h2>
+      <div class="tbl-wrap">
+        <svg viewBox="0 0 ${svgW} 150" style="height:150px;width:100%;min-width:400px;">
+          <line x1="20" y1="120" x2="${L*4+60}" y2="120" stroke="#c9c4b3" stroke-width="2"/>
+          ${svgNodes}
+        </svg>
+      </div>
+    </div>
+
+    <div class="card">
+      <details>
+        <summary style="cursor:pointer;font-family:var(--mono);font-size:11.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--accent-soft);">
+          Índice de fuentes normativas (para presentar a EDERSA) — ver / ocultar
+        </summary>
+        <p style="margin:8px 0;font-size:11.5px;color:var(--ink-soft);">Página según el número de página impreso en cada PDF ("X de N"), no el número de hoja del visor.</p>
+        <div class="tbl-wrap"><table>
+          <thead><tr>${Th("Documento")}${Th("Sección")}${Th("Contenido")}${Th("Página")}</tr></thead>
+          <tbody>
+            <tr>${Td("NT 008/01 EdERSA")}${Td("Tabla 8.2")}${Td("Estados climáticos por zona (D1/D2)")}${Td("3 de 27")}</tr>
+            <tr>${Td("NT 008/01 EdERSA")}${Td("§8.4 / Tabla 8.4")}${Td("Fórmula de viento V=K·C·q·F y coef. C")}${Td("3–4 de 27")}</tr>
+            <tr>${Td("NT 008/01 EdERSA")}${Td("§8.6.2.a")}${Td("Límite 25% rotura a T.m.a., sin carga adicional")}${Td("5 de 27")}</tr>
+            <tr>${Td("NT 008/01 EdERSA")}${Td("§8.6.2.b / §8.6.3")}${Td("Límite 70% rotura en estado más exigente ; tensión σ base a T.m.a.")}${Td("5–6 de 27")}</tr>
+            <tr>${Td("NT 008/01 EdERSA")}${Td("§8.8")}${Td("Flecha máxima (T. máx. sin viento)")}${Td("6 de 27")}</tr>
+            <tr>${Td("NT 008/01 EdERSA")}${Td("§8.11.4")}${Td("Hipótesis de cálculo según tipo de soporte")}${Td("8–14 de 27")}</tr>
+            <tr>${Td("NT 008/01 EdERSA")}${Td("§8.11.5 / Tabla 8.5")}${Td('Ke·Kc·S ≤ φ·Rc ; para postación de MADERA: Ke=1,1 (sin ensayo), Kc=1,0 sostén/1,2 retención-terminal, φ=0,5 SIEMPRE (0,9/0,75/0,7 son solo hormigón armado)')}${Td("16 de 27")}</tr>
+            <tr>${Td("NT 008/01 EdERSA")}${Td("§8.11.6.1 / .2")}${Td("Método Sulzberger/POHL-MOHR ; coef. seg. vuelco 1,5/1,2")}${Td("17 de 27")}</tr>
+            <tr>${Td("NT 008/01 EdERSA")}${Td("§8.11.6.5")}${Td("Ct = Cb = 4 kg/cm³ por defecto sin estudio de suelo")}${Td("18 de 27")}</tr>
+            <tr>${Td("NT 008/01 EdERSA")}${Td("§8.11.7.3")}${Td("Empotramiento directo E = H/10 + 0,60 m")}${Td("19 de 27")}</tr>
+            <tr>${Td("NT 008/01 EdERSA")}${Td("§9.3")}${Td("Ecuación de cambio de estado (cúbica en σ)")}${Td("21 de 27")}</tr>
+            <tr>${Td("NT 008/01 EdERSA")}${Td("§9.4")}${Td("Vano de regulación ar = √(Σa³/Σa)")}${Td("21 de 27")}</tr>
+            <tr>${Td("ET 2001/01 EdERSA")}${Td("Tabla I")}${Td("Dimensiones y empotramiento de postes de madera")}${Td("13 de 15")}</tr>
+            <tr>${Td("ET 2001/01 EdERSA")}${Td("Tabla IV (IRAM 9531)")}${Td("Carga de rotura Rc según Ø cima y longitud útil")}${Td("14 de 15")}</tr>
+            <tr>${Td("NT 008/01 EdERSA")}${Td("§8.11.6.4 / §8.11.6.5")}${Td("Presión máxima sobre el terreno y tabla de suelos")}${Td("17–18 de 27")}</tr>
+            <tr>${Td("EPEC ET 1005")}${Td("§4.7")}${Td("Altura libre mínima / gálibo según tipo de cruce")}${Td("6 de 13")}</tr>
+            <tr>${Td("EPEC ET 1005")}${Td("§5.5")}${Td("Separación mínima entre haces que se cruzan (0,20 m)")}${Td("10 de 13")}</tr>
+            <tr>${Td("—")}${Td("—")}${Td('Peso de poste de madera: NO tabulado en ninguna de las 3 normas — estimado por volumen (Tabla I, dimensiones) × densidad bibliográfica')}${Td("—")}</tr>
+          </tbody>
+        </table></div>
+      </details>
+    </div>
+
+    <div class="card">
+      <h2>Observaciones y supuestos</h2>
+      <ul class="obs">
+        <li>Estados climáticos y coeficientes K, C: NT 008/01 tablas 8.2 y 8.4 (EdERSA, Río Negro). Para EPEC/EPEN usar los estados de su propia norma.</li>
+        <li>Estado base del tesado: T.m.a. sin viento, con tensión fija de Tabla §8.6.3 según material del conductor y uso (o no) de antivibratorios — no un "coeficiente de seguridad" libre.</li>
+        <li>Se verifica explícitamente que la tensión a T.m.a. no supere el 25% de la rotura (§8.6.2.a) y que la tensión en el estado más exigente (viento máximo o hielo) no supere el 70% de la carga de rotura (§8.6.2.b).</li>
+        <li><b style="color:var(--ink)">Corrección de auditoría (Tabla 8.5):</b> para postación de <b style="color:var(--ink)">madera</b> corresponde φ=0,5 siempre (Sostén/Retención/Terminal), y Ke=1,1 sin ensayo — el 0,9 que traía esta herramienta por defecto es el valor de <b>hormigón armado</b>, no de madera, y sobrestimaba la resistencia admisible φ·Rc casi al doble. Usá el botón "Aplicar Tabla 8.5" de la tarjeta 3 para cargar el valor correcto según el tipo de estructura elegido.</li>
+        <li>Presión de viento sobre la estructura: aproximada asumiendo un poste "medio" de el Ø de poste expuesto cargado en el panel (por defecto 0,18 m) (C=0,7, Tabla 8.4). Con el diámetro real de cima/base del poste, recalcular para el proyecto ejecutivo.</li>
+        <li>Fundación: método simplificado (ver nota en la tarjeta G). Ct = Cb = 4 kg/cm³ es el valor por defecto de §8.11.6.5 sin estudio de suelo; reemplazar por el valor real cuando exista. El coeficiente de seguridad al vuelco usado acá (1,5 normal / 1,2 excepcional, s/§8.11.6.2) es el que fija la norma "para los restantes métodos" fuera de Sulzberger — el ejemplo resuelto del Anexo de EDERSA usa además un "Coeficiente de Estabilidad" por relación Ms/Mb tabulado aparte (no incluido en los PDF de esta auditoría); si tu inspector EDERSA lo exige, pedile esa tabla puntual para contrastar.</li>
+        <li>Separación mínima entre haces que se cruzan: 0,20 m (ET 1005 §5.5) — verificación puntual, no automática. Nota: los valores de gálibo y separación de EPEC ET 1005 citados en esta herramienta no pudieron re-verificarse contra el PDF de ET 1005 en la última auditoría (no estaba disponible); si tenés esa norma, conviene confirmarlos.</li>
+        <li>El vano ("distancia en línea recta") es 100% editable en el campo "Vanos parciales"; cargá tantos tramos como apoyos tenga el proyecto.</li>
+        <li>El cálculo supone vanos nivelados; con desnivel debe corregirse la flecha por el coeficiente de vano inclinado.</li>
+        <li>Límites de ΔU: 3% en BT y 5% en MT salvo que la distribuidora fije otro valor (confirmar con ACMEE ET 5 / normativa local).</li>
+        <li>Datos del conductor: valores de catálogo IRAM habituales — reemplazar por la ficha técnica del fabricante antes de emitir.</li>
+        <li>Falta para validar 100% ante EDERSA: perfil topográfico con cotas, ficha de conductor certificada, resistencia de cima real del poste, estudio de suelo y firma de profesional matriculado (AEA 95201/95301 exige proyecto firmado).</li>
+      </ul>
+    </div>
+  `;
+
+  const okCount = (html.match(/pill ok/g)||[]).length;
+  const badCount = (html.match(/pill bad/g)||[]).length;
+  const resumen = `
+    <div class="resumen-bar">
+      <div class="rb-item"><span class="rb-num ok">${okCount}</span> verificaciones OK</div>
+      <div class="rb-item"><span class="rb-num ${badCount>0?'bad':''}">${badCount}</span> sin verificar</div>
+      <div class="rb-item" style="margin-left:auto;color:var(--ink-faint);">Poste ${fmt(alturaPoste,2)}m · ${$("tipo").selectedOptions[0].text} · vano reg. ${fmt(ar,2)}m</div>
+    </div>
+    <div class="nav-jump">
+      <a href="#grp-mecanica">↳ Mecánica del conductor</a>
+      <a href="#grp-estructura">↳ Estructura y fundación</a>
+      <a href="#grp-electrico">↳ Eléctrico</a>
+      <a href="#grp-trazado">↳ Trazado y documentación</a>
+      <span class="spacer"></span>
+      <button type="button" class="toggle-all" id="btnExpandirTodo">Expandir todo</button>
+      <button type="button" class="toggle-all" id="btnColapsarTodo">Colapsar todo</button>
+    </div>`;
+
+  $("results").innerHTML = resumen + html;
+  aplicarColapsados();
+  $("btnColapsarTodo").onclick = () => {
+    document.querySelectorAll('#results .card').forEach(card=>{
+      const h2 = card.querySelector(':scope > h2');
+      if(h2) colapsados.add(h2.textContent.trim());
+    });
+    guardarColapsados(); aplicarColapsados();
+  };
+  $("btnExpandirTodo").onclick = () => {
+    colapsados.clear();
+    guardarColapsados(); aplicarColapsados();
+  };
+}
+
+// Tarjetas colapsadas (para que la página no sea un solo listado largo) — persistido por título de tarjeta
+const COLLAPSE_KEY = "calc_lineas_aereas_edersa_v1_collapsed";
+let colapsados = new Set();
+try{
+  const rawC = localStorage.getItem(COLLAPSE_KEY);
+  if(rawC) colapsados = new Set(JSON.parse(rawC));
+}catch(e){}
+
+function guardarColapsados(){
+  try{ localStorage.setItem(COLLAPSE_KEY, JSON.stringify([...colapsados])); }catch(e){}
+}
+function aplicarColapsados(){
+  document.querySelectorAll('#results .card').forEach(card=>{
+    const h2 = card.querySelector(':scope > h2');
+    if(!h2) return;
+    card.classList.toggle('collapsed', colapsados.has(h2.textContent.trim()));
+  });
+}
+$("results").addEventListener("click", (e)=>{
+  const h2 = e.target.closest('.card > h2');
+  if(!h2) return;
+  const key = h2.textContent.trim();
+  if(colapsados.has(key)) colapsados.delete(key); else colapsados.add(key);
+  h2.parentElement.classList.toggle('collapsed');
+  guardarColapsados();
+});
+
+// wire up all inputs to re-render on change/input
+const CAMPOS_PERSISTENTES = ["zona","cond","antivib","alturaPoste","nFases","sepMensulas","tipo","angulo","Ke","Kc","phi","Rc","diamFund",
+ "pesoPoste","densidadMadera","diamPoste","tipoSuelo","ctSuelo","coefFund","usarRienda","anguloRienda",
+ "trifasica","I","cosphi","Un","limite","galibo","vanosTxt","modoTraza","longTotal","nVanos"];
+
+const STORAGE_KEY = "calc_lineas_aereas_edersa_v1";
+
+function guardarEstado(){
+  try{
+    const estado = {};
+    CAMPOS_PERSISTENTES.forEach(id=>{
+      const el = $(id);
+      if(!el) return;
+      estado[id] = (el.type==="checkbox") ? el.checked : el.value;
+    });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(estado));
+  }catch(e){ /* almacenamiento no disponible, se sigue sin persistencia */ }
+}
+
+function cargarEstado(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return false;
+    const estado = JSON.parse(raw);
+    CAMPOS_PERSISTENTES.forEach(id=>{
+      const el = $(id);
+      if(!el || !(id in estado)) return;
+      if(el.type==="checkbox") el.checked = !!estado[id];
+      else el.value = estado[id];
+    });
+    return true;
+  }catch(e){ return false; }
+}
+
+CAMPOS_PERSISTENTES.forEach(id => {
+   const el = $(id);
+   el.addEventListener("input", ()=>{ render(); guardarEstado(); });
+   el.addEventListener("change", ()=>{ render(); guardarEstado(); });
+});
+
+const seRestauraron = cargarEstado();
+render();
+if(seRestauraron){
+  const aviso = document.createElement("div");
+  aviso.className = "note";
+  aviso.style.margin = "0 0 14px";
+  aviso.textContent = "Se restauraron los datos de tu última sesión guardada en este navegador.";
+  $("results").prepend(aviso);
+}
+$("btnBorrarGuardado").addEventListener("click", ()=>{
+  if(confirm("¿Borrar los datos guardados en este navegador y recargar la página con los valores por defecto?")){
+    try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+    location.reload();
+  }
+});
+</script>
+</body>
+</html>
