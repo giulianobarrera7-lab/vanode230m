@@ -210,6 +210,46 @@
     transition:all 0.15s ease; white-space:nowrap;
   }
   .nav-jump a:hover{color:var(--accent-soft); border-color:var(--accent); background:var(--accent-bg);}
+  .nav-jump .spacer{flex:1;}
+  .nav-jump button.toggle-all{
+    font-size:11.5px; font-weight:600; color:var(--ink-soft); cursor:pointer;
+    padding:6px 11px; border-radius:20px; border:1px solid var(--rule); background:var(--rule-soft);
+    transition:all 0.15s ease; white-space:nowrap; font-family:var(--sans);
+  }
+  .nav-jump button.toggle-all:hover{color:var(--accent-soft); border-color:var(--accent); background:var(--accent-bg);}
+
+  /* Tarjetas colapsables: click en el título para plegar/desplegar */
+  .card h2{cursor:pointer; user-select:none;}
+  .card h2::after{content:"▾"; margin-left:auto; color:var(--ink-faint); font-size:11px; transition:transform 0.15s ease; flex:none;}
+  .card.collapsed h2{margin-bottom:0;}
+  .card.collapsed h2::after{transform:rotate(-90deg);}
+  .card.collapsed > *:not(h2){display:none;}
+
+  /* Tarjeta de resultado final */
+  .card-final{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent-bg);}
+  .final-verdict{
+    font-family:var(--mono); font-weight:700; font-size:15px; letter-spacing:0.3px;
+    padding:9px 14px; border-radius:10px; margin:0 0 14px;
+  }
+  .final-verdict.ok{background:var(--ok-bg); color:var(--ok); border:1px solid var(--ok-border);}
+  .final-verdict.bad{background:var(--bad-bg); color:var(--bad); border:1px solid var(--bad-border);}
+  .final-grid{display:flex; flex-direction:column; gap:2px;}
+  .final-item{
+    display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:8px; font-size:12.5px;
+  }
+  .final-item .fi-dot{width:8px; height:8px; border-radius:50%; flex:none;}
+  .final-item.ok .fi-dot{background:var(--ok);}
+  .final-item.bad .fi-dot{background:var(--bad);}
+  .final-item .fi-label{color:var(--ink-soft); flex:1;}
+  .final-item .fi-val{font-family:var(--mono); font-weight:700; font-size:11.5px; letter-spacing:0.3px;}
+  .final-item.ok .fi-val{color:var(--ok);}
+  .final-item.bad .fi-val{color:var(--bad);}
+  .final-item.bad{background:var(--bad-bg);}
+  .final-item.ok:hover, .final-item.bad:hover{filter:brightness(1.15);}
+
+  /* Resaltar en color el valor decisivo dentro de una tarjeta de verificación */
+  .stat .v.ok{color:var(--ok);}
+  .stat .v.bad{color:var(--bad);}
 </style>
 </head>
 <body>
@@ -916,6 +956,19 @@ function render(){
   const I=Number($("I").value), cosphi=Number($("cosphi").value), Un=Number($("Un").value), limite=Number($("limite").value);
   const cdt = caidaTension({ trifasica, I, L, R:c.R20, X:c.X, cosphi, Un, nTernas: nFases });
 
+  const presionVerif = suelo.presionAdm!=null ? (fund.pMaxTerrenoReal<=suelo.presionAdm) : null;
+  const puntosFinales = [
+    { label:"Conductor — 25% rotura a T.m.a. (§8.6.2.a)", ok:tendido.verifica25 },
+    { label:"Conductor — 70% rotura estado más exigente (§8.6.2.b)", ok:tendido.verifica70 },
+    { label:`Gálibo ≥ ${galibo} m (distancia al suelo)`, ok:distSuelo>=galibo },
+    { label:"Estructura — Ke·Kc·S ≤ φ·Rc (§8.11.5)", ok:verif.verifica },
+    { label:"Fundación — Ms+Mb > s·Mv (§8.11.6.2)", ok:fund.verifica },
+    { label:"Fundación — ángulo de giro tg α ≤ 0,01 (§8.11.6.3)", ok:fund.giroVerifica },
+    ...(presionVerif!=null ? [{ label:"Presión sobre el terreno ≤ admisible (§8.11.6.4)", ok:presionVerif }] : []),
+    { label:`Caída de tensión ΔU ≤ ${limite}%`, ok:cdt.pct<=limite },
+  ];
+  const puntosFallando = puntosFinales.filter(p=>!p.ok).length;
+
   const svgW = Math.max(400, L*4+80);
   let x = 40; let svgNodes = "";
   vanos.forEach((v,i)=>{
@@ -936,6 +989,20 @@ function render(){
     </g>`;
 
   const html = `
+    <div class="card card-final">
+      <h2>✔ Resultado final — lo que vas a presentar a EDERSA</h2>
+      <p class="ref">Junta el veredicto de cada verificación de más abajo en un solo lugar. Si algo cambia de color acá, cambió en alguna tarjeta de la página — bajá a esa sección (usá los accesos de arriba) para ver el detalle y corregir.</p>
+      <p class="final-verdict ${puntosFallando===0 ? 'ok':'bad'}">${puntosFallando===0 ? '✔ TODO VERIFICA' : `✗ ${puntosFallando} de ${puntosFinales.length} punto${puntosFallando>1?'s':''} SIN VERIFICAR`}</p>
+      <div class="final-grid">
+        ${puntosFinales.map(p=>`
+          <div class="final-item ${p.ok?'ok':'bad'}">
+            <span class="fi-dot"></span>
+            <span class="fi-label">${p.label}</span>
+            <span class="fi-val">${p.ok?'VERIFICA':'NO VERIFICA'}</span>
+          </div>`).join("")}
+      </div>
+    </div>
+
     <div class="group-label" id="grp-mecanica">Mecánica del conductor</div>
     <div class="card">
       <h2>A) Vano de regulación</h2>
@@ -1188,10 +1255,52 @@ function render(){
       <a href="#grp-estructura">↳ Estructura y fundación</a>
       <a href="#grp-electrico">↳ Eléctrico</a>
       <a href="#grp-trazado">↳ Trazado y documentación</a>
+      <span class="spacer"></span>
+      <button type="button" class="toggle-all" id="btnExpandirTodo">Expandir todo</button>
+      <button type="button" class="toggle-all" id="btnColapsarTodo">Colapsar todo</button>
     </div>`;
 
   $("results").innerHTML = resumen + html;
+  aplicarColapsados();
+  $("btnColapsarTodo").onclick = () => {
+    document.querySelectorAll('#results .card').forEach(card=>{
+      const h2 = card.querySelector(':scope > h2');
+      if(h2) colapsados.add(h2.textContent.trim());
+    });
+    guardarColapsados(); aplicarColapsados();
+  };
+  $("btnExpandirTodo").onclick = () => {
+    colapsados.clear();
+    guardarColapsados(); aplicarColapsados();
+  };
 }
+
+// Tarjetas colapsadas (para que la página no sea un solo listado largo) — persistido por título de tarjeta
+const COLLAPSE_KEY = "calc_lineas_aereas_edersa_v1_collapsed";
+let colapsados = new Set();
+try{
+  const rawC = localStorage.getItem(COLLAPSE_KEY);
+  if(rawC) colapsados = new Set(JSON.parse(rawC));
+}catch(e){}
+
+function guardarColapsados(){
+  try{ localStorage.setItem(COLLAPSE_KEY, JSON.stringify([...colapsados])); }catch(e){}
+}
+function aplicarColapsados(){
+  document.querySelectorAll('#results .card').forEach(card=>{
+    const h2 = card.querySelector(':scope > h2');
+    if(!h2) return;
+    card.classList.toggle('collapsed', colapsados.has(h2.textContent.trim()));
+  });
+}
+$("results").addEventListener("click", (e)=>{
+  const h2 = e.target.closest('.card > h2');
+  if(!h2) return;
+  const key = h2.textContent.trim();
+  if(colapsados.has(key)) colapsados.delete(key); else colapsados.add(key);
+  h2.parentElement.classList.toggle('collapsed');
+  guardarColapsados();
+});
 
 // wire up all inputs to re-render on change/input
 const CAMPOS_PERSISTENTES = ["zona","cond","antivib","alturaPoste","nFases","sepMensulas","tipo","angulo","Ke","Kc","phi","Rc","diamFund",
